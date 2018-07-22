@@ -1,9 +1,19 @@
-var express = require('express');
-var router = express.Router();
+// index.js
+const express = require("express");
+const bodyParser = require("body-parser");
+const app = express();
+const port = process.env.PORT;
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+app.use(bodyParser.json());
+
+app.get("/", function(req, res) {
+    res.json({
+        status: "My API is alive!"
+    });
 });
 
-module.exports = router;
+app.listen(port, function() {
+    console.log("My API is running...");
+});
+
+module.exports = app;  

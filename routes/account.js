@@ -19,7 +19,7 @@ const registerAccount = (req, res, next) => {
         })
 };
 
-const createUser  = (req,res) => {
+const createUser  = (req,res, next) => {
     const user = {userName:req.user.username, accountId: req.user._id.toString(),email:req.email};
 
     Branch.createUser(user,(err, user)=> {
@@ -32,12 +32,18 @@ const createUser  = (req,res) => {
 
         // carry on
         else {
-            //TODO 07/25/18: create and return a token
-            res.json(user);
+            const token = getToken(user);
+            res.status(200).send({auth: true, token: token});
         }
     });
-    
-}
+
+};
+
+const getToken=(user)=>{
+        return jwt.sign({id: user._id}, config.secret, {
+            expiresIn: 86400 // expires in 24 hours
+        });
+};
 
 
 router.post('/register',
@@ -46,18 +52,24 @@ router.post('/register',
 
 
 
-router.get('/login', function(req, res) {
-    res.json(user);
-});
 
-router.post('/login', passport.authenticate('local', {
-    successRedirect: '/',
-    failureRedirect: '/login'
-}));
+router.post('/login', passport.authenticate('local', (err, user)=>{
+    //TODO 180726 make error and unauthorized login redirects something better
+    if(err){
+        res.status(503).send("There was an error");
+    }
+    if(!user){
+        res.status(401).send("unauthorized login");
+    }
+    const token = getToken(user);
+    res.status(200).send({auth: true, token: token});
+    }(req, res, next);
+));
 
+    //TODO later: fix the logout so we invalidate the token somehow
 router.get('/logout', function(req, res) {
     req.logout();
-    res.redirect('/');
+    res.redirect('/login');
 });
 router.stack.map((r)=>{
     if (r.route && r.route.path){

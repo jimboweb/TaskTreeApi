@@ -26,7 +26,8 @@ if(process.env.DBENV==='LOCAL'){
 
 
 const indexRouter = require('./routes/index');
-const usersRouter = require('./routes/users');
+
+const userRouter = require('./routes/user');
 
 const app = express();
 
@@ -41,7 +42,7 @@ app.use(cookieParser());
 app.use(passport.initialize());
 
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
+app.use('/user', userRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -53,11 +54,11 @@ passport.use( new localStrategy(Account.authenticate()));
 passport.serializeUser(Account.serializeUser());
 passport.deserializeUser(Account.deserializeUser());
 
-
 const uri = db.makeDbUri(dbPrtcl, dbUser, dbPw, dbStr);
 mongoose.connection.on('connected',()=>{console.log("connected to mongodb")});
 console.log('uri = ' + uri);
 mongoose.connect(uri,{ useNewUrlParser: true });
+
 
 // error handler
 app.use(function(err, req, res, next) {

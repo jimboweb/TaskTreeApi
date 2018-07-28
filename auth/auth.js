@@ -1,7 +1,7 @@
 // auth.js
 var passport = require("passport");
 var passportJWT = require("passport-jwt");
-var users = require("../routes/users.js");
+var users = require("../routes/user.js");
 var cfg = require("../config.js");
 var ExtractJwt = passportJWT.ExtractJwt;
 var Strategy = passportJWT.Strategy;

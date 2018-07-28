@@ -97,7 +97,11 @@ const createUser = (user,callback)=>{
     createCategory(uncat,
         (err,cat)=>{
             const catId = cat._id.toString();
-            const newUser = new User({userName:user.userName,accountId:user.accountId,email:user.email,categories:[catId]});
+            const newUser = new User({userName:user.userName,
+                accountId:user.accountId,
+                email:user.email,
+                categories:[catId]
+            });
             User.create(newUser,callback);
         })
 };

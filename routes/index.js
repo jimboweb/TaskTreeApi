@@ -1,17 +1,21 @@
 // index.js
-var express = require("express");
-var bodyParser = require("body-parser");
-var jwt = require("jwt-simple");
-var auth = require("../auth/auth.js")();
-var users = require("./users.js");
-var cfg = require("../config.js");
+const express = require("express");
+const bodyParser = require("body-parser");
+const jwt = require("jwt-simple");
+const auth = require("../auth/auth.js")();
+const users = require("./user.js");
+const cfg = require("../config.js");
 const accountController = require('./account');
 
-var app = express();
+
+
+const app = express();
 
 app.use(bodyParser.json());
 app.use(auth.initialize());
 app.use('/account',accountController);
+
+
 
 app.get("/", function(req, res) {
     res.json({
@@ -26,16 +30,16 @@ app.get("/", function(req, res) {
 
 app.post("/token", function(req, res) {
     if (req.body.email && req.body.password) {
-        var email = req.body.email;
-        var password = req.body.password;
-        var user = users.find(function(u) {
+        const email = req.body.email;
+        const password = req.body.password;
+        const user = users.find(function(u) {
             return u.email === email && u.password === password;
         });
         if (user) {
-            var payload = {
+            const payload = {
                 id: user.id
             };
-            var token = jwt.encode(payload, cfg.jwtSecret);
+            const token = jwt.encode(payload, cfg.jwtSecret);
             res.json({
                 token: token
             });

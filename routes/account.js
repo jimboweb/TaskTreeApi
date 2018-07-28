@@ -103,11 +103,13 @@ router.get('/logout', function(req, res) {
     req.logout();
     res.redirect('/login');
 });
-router.stack.map((r)=>{
-    if (r.route && r.route.path){
-        console.log(r.route.path);
-    }
 
-});
+//debug list of routes
+// router.stack.map((r)=>{
+//     if (r.route && r.route.path){
+//         console.log(r.route.path);
+//     }
+//
+// });
 
 module.exports=router;

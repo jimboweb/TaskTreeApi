@@ -107,7 +107,7 @@ const createUser = (user,callback)=>{
 };
 
 const getUser = (id,callback)=>{
-    const idQuery = {_id:id};
+    const idQuery = {accountId:id};
     User.findOne(idQuery,standardOptions,callback);
 }
 const createCategory = (category,callback)=>{

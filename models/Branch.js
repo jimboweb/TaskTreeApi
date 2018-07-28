@@ -110,6 +110,10 @@ const getUser = (id,callback)=>{
     const idQuery = {accountId:id};
     User.findOne(idQuery,standardOptions,callback);
 }
+const updateUser = (id,obj, callback)=>{
+    const idQuery = {accountId:id};
+    User.findOneAndUpdate(idQuery,obj, standardOptions,callback);
+}
 const createCategory = (category,callback)=>{
     Category.create(category,
         callback);
@@ -183,5 +187,5 @@ queries.createEvent = createEvent;
 queries.deleteEvent = deleteEvent;
 queries.updateEvent = updateEvent;
 queries.getEvent = getEvent;
-
+queries.updateUser = updateUser;
 module.exports = queries;

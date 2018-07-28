@@ -36,6 +36,8 @@ router.get('/',verifyToken,getUserByAccountId,(req,res)=>{
 //
 // });
 
+router.getUserByAccountId = getUserByAccountId;
+
 module.exports = router;
 
 // // user.js

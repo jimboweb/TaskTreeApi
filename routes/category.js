@@ -10,15 +10,19 @@ const Branch = require('../models/Branch');
  */
 router.post('/add',verifyToken,userController.getUserByAccountId,(req,res, next)=>{
     const category = req.body;
+    category.accountId = req.userObj.accountId;
+    //FIXME 180729: "name" property not being added to new category
     Branch.createCategory(category,(err,cat)=>{
         if(err){
             res.status(500).send(err);
         }
-        req.userObj.categories.push(category);
-        Branch.updateUser(req.userObj.accountId,req.userObj,(err,usr)=>{
+        const userObj = req.userObj;
+        userObj.categories.push(cat);
+        Branch.updateUser(userObj.accountId,userObj,(err,usr)=>{
             if(err){
                 res.status(500).send(err);
             }
+            res.status(200).send(cat);
         });
     });
 });

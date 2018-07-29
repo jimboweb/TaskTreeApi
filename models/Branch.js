@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 //TODO 7/10/18: create user on registration
 
-const standardOptions = {lean:true};
+const standardOptions = {/*lean:true*/};
 
 
 /**

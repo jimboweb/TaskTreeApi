@@ -26,8 +26,10 @@ if(process.env.DBENV==='LOCAL'){
 
 
 const indexRouter = require('./routes/index');
-
 const userRouter = require('./routes/user');
+const categoryRouter = require('./routes/category');
+const eventRouter = require('./routes/event');
+const taskRouter = require('./routes/task');
 
 const app = express();
 
@@ -43,6 +45,9 @@ app.use(passport.initialize());
 
 app.use('/', indexRouter);
 app.use('/user', userRouter);
+app.use('/category', categoryRouter);
+app.use('/event',eventRouter);
+app.use('/task',taskRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -69,6 +74,13 @@ app.use(function(err, req, res, next) {
     // render the error page
     res.status(err.status || 500);
     res.json({err})
+});
+
+// debug; list of routes
+app._router.stack.map((r)=>{
+if (r.route && r.route.path){
+    console.log(r.route.path)
+}
 });
 
 

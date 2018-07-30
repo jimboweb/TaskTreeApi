@@ -4,7 +4,12 @@ const verifyToken = require('../auth/verifyToken');
 const userController = require('./user');
 const Branch = require('../models/Branch');
 
-
+//TODO 180729:
+// create '/' get route to get all categories
+// '/:id' GET route for specific category
+// '/:id' PUT route to update category
+// '/:id' DELETE route 
+// (maybe get rid of 'add' in route since post is automatically add)
 
 /**
  * body of request should be category as json object

@@ -8,6 +8,7 @@ const Branch = require('../models/Branch');
 
 /**
  * body of request should be category as json object
+ * don't forget 'Content-Type':'application/json'!!
  */
 router.post('/add',verifyToken,userController.getUserByAccountId,(req,res, next)=>{
     const category = req.body;

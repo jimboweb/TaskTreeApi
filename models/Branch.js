@@ -196,4 +196,5 @@ queries.deleteEvent = deleteEvent;
 queries.updateEvent = updateEvent;
 queries.getEvent = getEvent;
 queries.updateUser = updateUser;
+queries.getAllCategories = getAllCategories;
 module.exports = queries;

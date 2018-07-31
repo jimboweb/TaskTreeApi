@@ -33,8 +33,13 @@ router.post('/',verifyToken,userController.getUserByAccountId,(req,res, next)=>{
     });
 });
 
-router.get('./',verifyToken,userController.getUserByAccountId,(req,res,next)=>{
-    res.status(200).send(req.userObj.categories);
+router.get('/',verifyToken,(req,res)=>{
+    Branch.getAllCategories(req.userId, (err,cats)=>{
+        if(err){
+            res.status(500).send("Can't get categories. Error: \n" + err);
+        }
+        res.status(200).send(cats);
+    });
 
 });
 

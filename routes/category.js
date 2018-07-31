@@ -8,14 +8,14 @@ const Branch = require('../models/Branch');
 // create '/' get route to get all categories
 // '/:id' GET route for specific category
 // '/:id' PUT route to update category
-// '/:id' DELETE route 
+// '/:id' DELETE route
 // (maybe get rid of 'add' in route since post is automatically add)
 
 /**
  * body of request should be category as json object
  * don't forget 'Content-Type':'application/json'!!
  */
-router.post('/add',verifyToken,userController.getUserByAccountId,(req,res, next)=>{
+router.post('/',verifyToken,userController.getUserByAccountId,(req,res, next)=>{
     const category = req.body;
     category.accountId = req.userObj.accountId;
     Branch.createCategory(category,(err,cat)=>{
@@ -31,6 +31,11 @@ router.post('/add',verifyToken,userController.getUserByAccountId,(req,res, next)
             res.status(200).send(cat);
         });
     });
+});
+
+router.get('./',verifyToken,userController.getUserByAccountId,(req,res,next)=>{
+    res.status(200).send(req.userObj.categories);
+
 });
 
 module.exports=router;

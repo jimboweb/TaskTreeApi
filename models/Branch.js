@@ -28,7 +28,8 @@ const categorySchema = Schema({
     name: String,
     tasks: [{type: Schema.Types.ObjectId, ref: 'Task'}],
     events: [{type: Schema.Types.ObjectId, ref: 'Event'}],
-    user: {type: Schema.Types.ObjectId, ref: 'User'}
+    user: {type: Schema.Types.ObjectId, ref: 'User'},
+    accountId: String
 });
 
 /**
@@ -56,7 +57,8 @@ const taskSchema = Schema({
     parent: Schema.Types.ObjectId,
     prqTask: [{type: Schema.Types.ObjectId, ref: 'Task'}],
     prqEvent: [{type: Schema.Types.ObjectId, ref: 'Event'}],
-    estTime: Number
+    estTime: Number,
+    accountId: String,
 });
 
 /**
@@ -72,7 +74,8 @@ const eventSchema = Schema({
     prqEvent: [{type: Schema.Types.ObjectId, ref: 'Event'}],
     parent: Schema.Types.ObjectId,
     completed: Boolean,
-    prevDates: [Date]
+    prevDates: [Date],
+    accountId: String,
 })
 
 const noteSchema = Schema({
@@ -92,7 +95,7 @@ const createUser = (user,callback)=>{
         name: 'Uncategorized',
         tasks: [],
         events: [],
-        user: user._id
+        accountId: user.accountId
     }
     createCategory(uncat,
         (err,cat)=>{
@@ -132,6 +135,11 @@ const updateCategory=(id,obj,callback)=>{
 const getCategory = (id,callback) => {
     const idQuery = {_id:id};
     Category.findOne(idQuery, standardOptions,callback);
+};
+
+const getAllCategories = (accountId,callback)=>{
+    const query = {accountId:accountId};
+    Category.find(query, standardOptions, callback);
 };
 
 const getTask = (id,callback)=>{

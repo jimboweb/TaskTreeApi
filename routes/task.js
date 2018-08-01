@@ -20,7 +20,7 @@ router.post('/:parentType/:parentId', verifyToken, (req,res)=>{
                 res.status(500).send("Error creating task: " + err );
             }
             parent.tasks.push(tsk._id);
-            Branch.updateParent(parentType, parentId, parent).then(prnt){
+            Branch.updateParent(parentType, parentId, parent).then(){
                 res.status(200).send(tsk);
             }
         })

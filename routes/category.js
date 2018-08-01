@@ -3,6 +3,7 @@ const router = express.Router();
 const verifyToken = require('../auth/verifyToken');
 const userController = require('./user');
 const Branch = require('../models/Branch');
+const Permissions = require('../auth/permissions');
 
 //TODO 180729:
 // create '/' get route to get all categories
@@ -33,6 +34,9 @@ router.post('/',verifyToken,userController.getUserByAccountId,(req,res, next)=>{
     });
 });
 
+/**
+ * Get all categories for user associated with token
+ */
 router.get('/',verifyToken,(req,res)=>{
     Branch.getAllCategories(req.userId, (err,cats)=>{
         if(err){
@@ -43,4 +47,19 @@ router.get('/',verifyToken,(req,res)=>{
 
 });
 
+/**
+ * Get category by id. Will return unauthorized if accountId
+ * doesn't match userId of user associated with token
+ */
+router.get('/:id', verifyToken, (req,res)=>{
+   Branch.getCategory(req.params.id, (err,cat)=>{
+       if(err){
+           res.status(500).send("Can't get categories. Error: \n" + err);
+       }
+       if(Permissions.checkObjectPermissions(cat.accountId,req.userId)){
+           res.status(403).send("You are not authorized to see that category");
+       }
+       res.status(200).send(cat);
+   })
+});
 module.exports=router;

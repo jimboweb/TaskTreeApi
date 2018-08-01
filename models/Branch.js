@@ -180,6 +180,47 @@ const updateEvent = (id,obj,callback)=>{
     Event.findOneAndUpdate(idQuery,obj,standardOptions,callback);
 }
 
+
+
+/**
+ * Get the parent of a task or event. For now only categories and tasks
+ * can be parents; that may change.
+ * @param parentType either 'category' or 'task'
+ * @param parentId _id value of parent
+ * @returns resolve - the parent category or task object/reject - error message
+ */
+const getParent=(parentType, parentId)=>{
+    return new Promise((resolve, reject)=>{
+        const parentTypes = {'category':getCategory,'task': getTask};
+        const parentFunction = parentTypes[parentType];
+        if(!parentFunction){
+            reject({error:parentType + ' is not a valid parent type'});
+        }
+        parentFunction.call(this,parentId,(err,result)=>{
+            if(err){
+                reject({error:'parent of type ' + parentType + ' with id ' + parentId + ' does not exist'});
+            }
+            resolve(result);
+        });
+    })
+};
+
+const updateParent = (parentType, parentId, parent)=>{
+    return new Promise((resolve, reject)=>{
+        const parentTypes = {'category':updateCategory,'task': updateTask};
+        const parentFunction = parentTypes[parentType];
+        if(!parentFunction){
+            reject({error:parentType + ' is not a valid parent type'});
+        }
+        parentFunction.call(this,parentId,parent,(err,prnt)=>{
+            if(err){
+                reject({error:'unable to add new task to parent'});
+            }
+            resolve(prnt);
+        })
+    })
+}
+
 const queries = {};
 queries.createUser = createUser;
 queries.getUser = getUser;
@@ -197,4 +238,6 @@ queries.updateEvent = updateEvent;
 queries.getEvent = getEvent;
 queries.updateUser = updateUser;
 queries.getAllCategories = getAllCategories;
+queries.getParent = getParent;
+queries.updateParent = updateParent;
 module.exports = queries;

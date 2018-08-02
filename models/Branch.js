@@ -220,15 +220,55 @@ const updateParent = (parentType, parentId, parent)=>{
     })
 }
 
-//TODO 180801: need to actually get all the tasks and events and of course do it recursively
+//TODO 180802: test this mess
 
-const getCategoryRecursive=(categoryId)=>{
-    
+const getTaskOrCategoryRecursive = (type, id){
+    return new Promise((resolve, reject)=>{
+        type.findOne.call(null, {_id:id}, standardOptions, err=>{
+            if(err){
+                reject(err);
+            }
+        })
+            .then((cat)=>{
+                const category = cat;
+                const tasks = category.tasks;
+                const events = category.events;
+                category.tasks = tasks.map(async taskId=>{
+                    await getTaskRecursive(taskId, err=>{
+                        if(err){
+                            reject(err);
+                        }
+                    });
+                });
+                category.events = events.map(async eventId=>{
+                    await Event.findOne({_id:eventId}, standardOptions,err=>{
+                        if(err){
+                            reject(err);
+                        }
+                    });
+                });
+                resolve(category);
+            })
+    });
+
 }
 
+/**
+ * returns a promise
+ * @param taskId
+ */
 const getTaskRecursive = (taskId)=>{
+    return getTaskOrCategoryRecursive(Task, taskId);
 
 }
+
+/**
+ * returns a promise
+ * @param categoryId
+ */
+const getCategoryRecursive=(categoryId)=>{
+    return getTaskOrCategoryRecursive(Category,categoryId);
+};
 
 const queries = {};
 queries.createUser = createUser;

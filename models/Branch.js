@@ -220,6 +220,16 @@ const updateParent = (parentType, parentId, parent)=>{
     })
 }
 
+//TODO 180801: need to actually get all the tasks and events and of course do it recursively
+
+const getCategoryRecursive=(categoryId)=>{
+    
+}
+
+const getTaskRecursive = (taskId)=>{
+
+}
+
 const queries = {};
 queries.createUser = createUser;
 queries.getUser = getUser;
@@ -239,4 +249,6 @@ queries.updateUser = updateUser;
 queries.getAllCategories = getAllCategories;
 queries.getParent = getParent;
 queries.updateParent = updateParent;
+queries.getCategoryRecursive = getCategoryRecursive;
+queries.getTaskRecursive = getTaskRecursive;
 module.exports = queries;

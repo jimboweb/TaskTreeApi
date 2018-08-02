@@ -34,6 +34,8 @@ router.post('/',verifyToken,userController.getUserByAccountId,(req,res, next)=>{
     });
 });
 
+
+
 /**
  * Get all categories for user associated with token
  */
@@ -42,6 +44,7 @@ router.get('/',verifyToken,(req,res)=>{
         if(err){
             res.status(500).send("Can't get categories. Error: \n" + err);
         }
+        //TODO 180801: need to actually get all the tasks and events and of course do it recursively
         res.status(200).send(cats);
     });
 

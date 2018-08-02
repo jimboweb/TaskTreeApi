@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-//TODO 7/10/18: create user on registration
 
 const standardOptions = {/*lean:true*/};
 
@@ -89,7 +88,7 @@ const Task = mongoose.model('Task', taskSchema);
 const Event = mongoose.model('Event', eventSchema);
 const Note = mongoose.model('Note', userSchema);
 
-//TODO 7/13/2018: do the following with some kind of createObject thunk
+//TODO someday: do the following with some kind of createObject thunk
 const createUser = (user,callback)=>{
     const uncat = {
         name: 'Uncategorized',

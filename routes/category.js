@@ -19,6 +19,7 @@ const Permissions = require('../auth/permissions');
 router.post('/',verifyToken,userController.getUserByAccountId,(req,res, next)=>{
     const category = req.body;
     category.accountId = req.userObj.accountId;
+
     Branch.createCategory(category,(err,cat)=>{
         if(err){
             res.status(500).send(err);
@@ -54,14 +55,26 @@ router.get('/',verifyToken,(req,res)=>{
  * doesn't match userId of user associated with token
  */
 router.get('/:id', verifyToken, (req,res)=>{
-   Branch.getCategory(req.params.id, (err,cat)=>{
-       if(err){
-           res.status(500).send("Can't get categories. Error: \n" + err);
-       }
-       if(Permissions.checkObjectPermissions(cat.accountId,req.userId)){
-           res.status(403).send("You are not authorized to see that category");
-       }
-       res.status(200).send(cat);
-   })
+    Branch.getCategoryRecursive(req.params.id)
+        .then(
+            (cat)=>{
+                if(!Permissions.checkObjectPermissions(cat.accountId,req.userId)){
+                    res.status(403).send("You are not authorized to see that category");
+                }
+                const rtrn = cat;
+                res.status(200).send(rtrn);
+            },
+            (err)=>{
+                res.status(500).send(err);
+            }
+        )
+   // Branch.getCategory(req.params.id, (err,cat)=>{
+   //     if(err){
+   //         res.status(500).send("Can't get categories. Error: \n" + err);
+   //     }
+   //     if(Permissions.checkObjectPermissions(cat.accountId,req.userId)){
+   //         res.status(403).send("You are not authorized to see that category");
+   //     }
+   //     res.status(200).send(cat);
 });
 module.exports=router;

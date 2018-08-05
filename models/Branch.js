@@ -220,36 +220,38 @@ const updateParent = (parentType, parentId, parent)=>{
     })
 }
 
-//TODO 180802: test this mess
+//FIXME 180802: I am not getting promises, the promises aren't getting resolved here
+//TODO 180802: let's try this using find(parent:_id) instead and avoid all this map business
 
-const getTaskOrCategoryRecursive = (type, id){
-    return new Promise((resolve, reject)=>{
-        type.findOne.call(null, {_id:id}, standardOptions, err=>{
-            if(err){
-                reject(err);
-            }
-        })
-            .then((cat)=>{
-                const category = cat;
-                const tasks = category.tasks;
-                const events = category.events;
-                category.tasks = tasks.map(async taskId=>{
-                    await getTaskRecursive(taskId, err=>{
-                        if(err){
-                            reject(err);
-                        }
-                    });
-                });
-                category.events = events.map(async eventId=>{
-                    await Event.findOne({_id:eventId}, standardOptions,err=>{
-                        if(err){
-                            reject(err);
-                        }
-                    });
-                });
-                resolve(category);
-            })
+const getTaskOrCategoryRecursive = async (type, id)=>{
+    const rslt = await type.findOne.call(type, {_id:id},{}, standardOptions, err=>{
+        if(err){
+            return({err: err});
+        }
     });
+
+    const result = rslt.toObject();
+    const tasks = result.tasks?result.tasks:result.subTasks;
+    const events = result.events;
+    result.children = {};
+    result.children.tasks = tasks.map(async taskId=>{
+        const taskIdString = taskId.toString();
+        await getTaskRecursive(taskIdString, err=>{
+            if(err){
+                return({err: err});
+            }
+        });
+    });
+    result.children.events = events.map(async eventId=>{
+        const eventIdString = eventId.toString();
+        await Event.findOne({_id:eventIdString}, standardOptions,err=>{
+            if(err){
+                return({err: err});
+            }
+        });
+    });
+    return result;
+    ;
 
 }
 
@@ -258,7 +260,10 @@ const getTaskOrCategoryRecursive = (type, id){
  * @param taskId
  */
 const getTaskRecursive = (taskId)=>{
-    return getTaskOrCategoryRecursive(Task, taskId);
+    getTaskOrCategoryRecursive(Task, taskId)
+        .then(task=>
+            {return task}
+        );
 
 }
 

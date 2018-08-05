@@ -60,9 +60,8 @@ router.get('/:id', verifyToken, (req,res)=>{
             (cat)=>{
                 if(!Permissions.checkObjectPermissions(cat.accountId,req.userId)){
                     res.status(403).send("You are not authorized to see that category");
-                }
-                const rtrn = cat;
-                res.status(200).send(rtrn);
+                };
+                res.status(200).send(cat);
             },
             (err)=>{
                 res.status(500).send(err);

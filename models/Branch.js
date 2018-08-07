@@ -220,8 +220,7 @@ const updateParent = (parentType, parentId, parent)=>{
     })
 }
 
-//FIXME 180802: I am not getting promises, the promises aren't getting resolved here
-//TODO 180802: let's try this using find(parent:_id) instead and avoid all this map business
+//FIXME 180806: now the task is being returned as an empty object. i think it's not returning until after it's sent.
 
 const getTaskOrCategoryRecursive = async (type, id)=>{
     const rslt = await type.findOne.call(type, {_id:id},{}, standardOptions, err=>{
@@ -234,14 +233,7 @@ const getTaskOrCategoryRecursive = async (type, id)=>{
     const tasks = result.tasks?result.tasks:result.subTasks;
     const events = result.events;
     result.children = {};
-    result.children.tasks = tasks.map(async taskId=>{
-        const taskIdString = taskId.toString();
-        await getTaskRecursive(taskIdString, err=>{
-            if(err){
-                return({err: err});
-            }
-        });
-    });
+    result.children.tasks = await getAllTasksRecursive(tasks);
     result.children.events = events.map(async eventId=>{
         const eventIdString = eventId.toString();
         await Event.findOne({_id:eventIdString}, standardOptions,err=>{
@@ -251,8 +243,19 @@ const getTaskOrCategoryRecursive = async (type, id)=>{
         });
     });
     return result;
-    ;
 
+
+}
+
+const getAllTasksRecursive = async(taskIds)=>{
+    const rtrn = await Promise.all(
+        taskIds.map(
+            async taskId=>{
+                return await getTaskRecursive(taskId.toString(), err=>{if(err){return {err:err}}});
+            }
+        )
+    )
+    return rtrn;
 }
 
 /**
@@ -260,10 +263,7 @@ const getTaskOrCategoryRecursive = async (type, id)=>{
  * @param taskId
  */
 const getTaskRecursive = (taskId)=>{
-    getTaskOrCategoryRecursive(Task, taskId)
-        .then(task=>
-            {return task}
-        );
+    return getTaskOrCategoryRecursive(Task, taskId)
 
 }
 

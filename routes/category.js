@@ -54,7 +54,7 @@ router.get('/',verifyToken,(req,res)=>{
  * Get category by id. Will return unauthorized if accountId
  * doesn't match userId of user associated with token
  */
-router.get('/:id', verifyToken, (req,res)=>{
+router.get('/:id', verifyToken, async (req,res)=>{
     Branch.getCategoryRecursive(req.params.id)
         .then(
             (cat)=>{

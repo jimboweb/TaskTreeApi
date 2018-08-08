@@ -267,6 +267,28 @@ const getTaskRecursive = (taskId)=>{
 
 }
 
+const deleteTaskRecursive = async taskId =>{
+    //TODO 180807: implement deleteTaskRecursive
+    return("not implemented");
+}
+
+const deleteTaskAndRebaseChildren = async (taskId, newParentId) => {
+    //TODO 180807: implement deleteTaskAndRebaseChildren
+    return("not implemented");
+}
+
+const deleteCategoryRecursive = async catId =>{
+    //TODO 180807: implement deleteCategoryRecursive
+    return("not implemented");
+
+}
+
+const deleteCategoryAndRebaseChildren = async (catId, newParentId) => {
+    //TODO 180807: implement deleteCategoryAndRebaseChildren
+    return("not implemented");
+
+}
+
 /**
  * returns a promise
  * @param categoryId

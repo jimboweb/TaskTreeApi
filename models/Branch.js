@@ -54,6 +54,7 @@ const taskSchema = Schema({
     notes: [{type: Schema.Types.ObjectId, ref: 'Note'}],
     external: Boolean,
     parent: Schema.Types.ObjectId,
+    parentType: String,
     prqTask: [{type: Schema.Types.ObjectId, ref: 'Task'}],
     prqEvent: [{type: Schema.Types.ObjectId, ref: 'Event'}],
     estTime: Number,
@@ -72,6 +73,7 @@ const eventSchema = Schema({
     prqTask: [{type: Schema.Types.ObjectId, ref: 'Task'}],
     prqEvent: [{type: Schema.Types.ObjectId, ref: 'Event'}],
     parent: Schema.Types.ObjectId,
+    parentType: String,
     completed: Boolean,
     prevDates: [Date],
     accountId: String,
@@ -204,12 +206,22 @@ const getParent=(parentType, parentId)=>{
     })
 };
 
+const getParentType=(parentTypeString)=>{
+    const parentTypes = {'category':getCategory,'task': getTask};
+    const parentFunction = parentTypes[parentTypeString];
+    if(!parentFunction){
+        return({'err' : parentTypeString + ' is not a valid parent type'});
+    }
+    return parentFunction;
+
+}
+
 const updateParent = (parentType, parentId, parent)=>{
     return new Promise((resolve, reject)=>{
         const parentTypes = {'category':updateCategory,'task': updateTask};
         const parentFunction = parentTypes[parentType];
         if(!parentFunction){
-            reject({error:parentType + ' is not a valid parent type'});
+            reject({"err":parentType + ' is not a valid parent type'});
         }
         parentFunction.call(this,parentId,parent,(err,prnt)=>{
             if(err){
@@ -245,7 +257,30 @@ const getTaskOrCategoryRecursive = async (type, id)=>{
     return result;
 
 
-}
+};
+
+const deleteTaskOrCategoryRecursive = async (type, id)=>{
+    const rslt = await type.findOneAndRemove.call(type, {_id:id},{}, standardOptions, err=>{
+        if(err){
+            return({err: err});
+        }
+    });
+    const result = rslt.toObject();
+    const tasks = result.tasks?result.tasks:result.subTasks;
+    const events = result.events;
+    result.children = {};
+    result.children.tasks = await deleteAllTasksRecursive(tasks);
+    result.children.events = events.map(async eventId=>{
+        const eventIdString = eventId.toString();
+        await Event.findOneAndRemove({_id:eventIdString}, standardOptions,err=>{
+            if(err){
+                return({err: err});
+            }
+        });
+    });
+    return result;
+
+};
 
 const getAllTasksRecursive = async(taskIds)=>{
     const rtrn = await Promise.all(
@@ -256,38 +291,57 @@ const getAllTasksRecursive = async(taskIds)=>{
         )
     )
     return rtrn;
-}
+};
+
+const deleteAllTasksRecursive = async(taskIds)=>{
+    const rtrn = await Promise.all(
+        taskIds.map(
+            async taskId=>{
+                return await deleteTaskRecursive(taskId.toString(), err=>{if(err){return {err:err}}});
+            }
+        )
+    )
+    return rtrn;
+};
+
+
+const verifyOwnership = async (type, id, accountId)=>{
+    const obj = await type.findOne({_id:id}, err=>{
+        return false;
+    }).select({"accountId":1});
+    if(obj){
+        return obj.accountId ===accountId;
+    }
+    return false;
+};
 
 /**
  * returns a promise
  * @param taskId
  */
 const getTaskRecursive = (taskId)=>{
-    return getTaskOrCategoryRecursive(Task, taskId)
-
-}
+    return getTaskOrCategoryRecursive(Task, taskId);
+};
 
 const deleteTaskRecursive = async taskId =>{
-    //TODO 180807: implement deleteTaskRecursive
-    return("not implemented");
-}
+    return deleteTaskOrCategoryRecursive(Task, taskId);
+};
 
 const deleteTaskAndRebaseChildren = async (taskId, newParentId) => {
     //TODO 180807: implement deleteTaskAndRebaseChildren
     return("not implemented");
-}
+};
 
 const deleteCategoryRecursive = async catId =>{
-    //TODO 180807: implement deleteCategoryRecursive
-    return("not implemented");
+    return deleteTaskOrCategoryRecursive(Category, catId);
 
-}
+};
 
 const deleteCategoryAndRebaseChildren = async (catId, newParentId) => {
     //TODO 180807: implement deleteCategoryAndRebaseChildren
     return("not implemented");
 
-}
+};
 
 /**
  * returns a promise
@@ -318,4 +372,13 @@ queries.getParent = getParent;
 queries.updateParent = updateParent;
 queries.getCategoryRecursive = getCategoryRecursive;
 queries.getTaskRecursive = getTaskRecursive;
+queries.verifyOwnership = verifyOwnership;
+queries.deleteCategoryRecursive = deleteCategoryRecursive;
+queries.deleteTaskRecursive = deleteTaskRecursive;
+queries.getParentType = getParentType;
+queries.Task = Task;
+queries.Category = Category;
+queries.Event = Event;
+queries.Note = Note;
+
 module.exports = queries;

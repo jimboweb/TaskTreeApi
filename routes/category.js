@@ -43,7 +43,7 @@ router.post('/',verifyToken,userController.getUserByAccountId,(req,res, next)=>{
 router.get('/',verifyToken,(req,res)=>{
     Branch.getAllCategories(req.userId, (err,cats)=>{
         if(err){
-            res.status(500).send("Can't get categories. Error: \n" + err);
+            res.status(500).send({"err":"Can't get categories. Error: \n" + err});
         }
         res.status(200).send(cats);
     });
@@ -59,21 +59,38 @@ router.get('/:id', verifyToken, async (req,res)=>{
         .then(
             (cat)=>{
                 if(!Permissions.checkObjectPermissions(cat.accountId,req.userId)){
-                    res.status(403).send("You are not authorized to see that category");
+                    res.status(403).send({"err":"You are not authorized to see that category"});
                 };
+                if(cat.err){
+                    res.status(500).send({"err":"Error retrieving category: " + cat.err});
+                }
                 res.status(200).send(cat);
-            },
-            (err)=>{
-                res.status(500).send(err);
             }
         )
-   // Branch.getCategory(req.params.id, (err,cat)=>{
-   //     if(err){
-   //         res.status(500).send("Can't get categories. Error: \n" + err);
-   //     }
-   //     if(Permissions.checkObjectPermissions(cat.accountId,req.userId)){
-   //         res.status(403).send("You are not authorized to see that category");
-   //     }
-   //     res.status(200).send(cat);
 });
+
+router.delete('/:id', verifyToken, async (req,res)=>{
+    if(!(await Branch.verifyOwnership(Branch.Category, req.params.id, req.userId))){
+        res.status(403).send({"err":"You are not authorized to delete that category"});
+    }
+    const deletedCategory = await Branch.deleteCategoryRecursive(req.params.id);
+    if(deletedCategory.err){
+        res.status(500).send({"err":"error deleting category" + deletedCategory.err});
+    }
+    res.status(200).send(deletedCategory);
+});
+
+router.put('/:id', verifyToken, async (req,res)=>{
+    const catId = req.params.id;
+    const update = req.body;
+    if(!(await Branch.verifyOwnership(Branch.Category, catId,req.userId))){
+        res.status(403).send({"err":"You are not authorized to modify that Category"})
+    }
+    const updatedCategory = await Branch.updateCategory(catId,update);
+    if(updatedCategory.err){
+        res.status(500).send({"err":"error updating category" + updatedCategory.err});
+    }
+    res.status(200).send(updatedCategory);
+})
+
 module.exports=router;

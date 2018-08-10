@@ -4,8 +4,12 @@ const verifyToken = require('../auth/verifyToken');
 const Branch = require('../models/Branch');
 const Permissions = require('../auth/permissions');
 
+// language=JavaScript 1.8
 /**
- * Get category recursive with tasks and subtasks etc.
+ * Add task to a category or parent
+ * @parentType 'Task' or 'Category'
+ * @param req.params.parentId: the id of the parent
+ * @return added task
  */
 router.post('/:parentType/:parentId', verifyToken, (req,res)=>{
     const parentId = req.params.parentId;
@@ -33,62 +37,60 @@ router.post('/:parentType/:parentId', verifyToken, (req,res)=>{
 });
 
 /**
- * TODO 180807: use getTaskRecursive here
+ * Get task and subtasks recursively
+ * @param req.params.taskId: the id of task to get
+ * @return task and all subtasks or error
  */
-router.get('/:taskId', verifyToken, (req,res)=>{
+router.get('/:taskId', verifyToken, async (req,res)=>{
     const taskId = req.params.taskId;
-    Branch.getTask(taskId, (err,task)=>{
-        if(err){
-            res.status(500).send("Error retrieving task: " + err);
-        }
-        if(!Permissions.checkObjectPermissions(task.accountId,req.userId)){
-            res.status(403).send('You do not have access to that task object');
-        }
-        res.status(200).send(task);
-    })
+    if(!(await Branch.verifyOwnership(Branch.Task,taskId,req.userId))) {
+        res.status(403).send({"err": "You are not authorized to get that task"});
+    }
+    const task = await Branch.getTaskRecursive(taskId);
+    if(task.err){
+        res.status(500).send({"err":task.err});
+    }
+    res.status(200).send(task);
 })
 
 /**
- * TODO 180807: need a recursive method and an option to move subtasks up to parent
+ * Delete task and all subtasks recursively
+ * @param req.params.id: id of task to delte
+ * @return the deleted task or error
+ * TODO 180810: delete index from parent
  */
-router.delete('/:taskId', verifyToken, (req,res)=>{
-    const taskId = req.params.taskId;
-    Branch.getTask(taskId,(err, task)=>{
-        if(!Permissions.checkObjectPermissions(task.accountId,req.userId)){
-            res.status(403).send('You do not have access to that task object');
-        } else {
-            Branch.deleteTask(taskId,(err, deletedTask)=>{
-                if(err){
-                    res.status(500).send('Error deleting task: ' + err)
-                }
-                res.status(200).send(deletedTask);
-            })
-        }
+router.delete('/:id', verifyToken, async (req,res)=>{
+    const taskId = req.params.id;
+    if(!(await Branch.verifyOwnership(Branch.Task,taskId,req.userId))){
+        res.status(403).send({"err":"You are not authorized to delete that task"});
+    }
+    const deletedTask = await Branch.deleteTaskRecursive(taskId);
+    if(deletedTask.err){
+        res.status(500).send({"err":"error deleting task" + deletedTask.err});
+    }
+    res.status(200).send(deletedTask);
+});
 
-    })
-})
+
 
 
 /**
- * This method is not for adding subtasks, events or notes; they'll be added in the create
- * method. Only for changing top-level properties.
+ * Modify parent-level elements of categroy.
+ * @param req.params.id: the id of the category to update
+ * @param req.body: the json of the updated category
+ * @return the updated category
  */
-router.put('/:taskId', verifyToken, (req,res)=>{
+router.put('/:taskId', verifyToken, async (req,res)=>{
     const taskId = req.params.taskId;
     const update = req.body;
-    Branch.getTask(taskId,(err, task)=>{
-        if(!Permissions.checkObjectPermissions(task.accountId,req.userId)){
-            res.status(403).send('You do not have access to that task object');
-        } else {
-            Branch.updateTask(taskId,update(err, updatedTask)=>{
-                if(err){
-                    res.status(500).send('Error deleting task: ' + err)
-                }
-                res.status(200).send(updatedTask);
-            })
-        }
-
-    })
+    if(!(await Branch.verifyOwnership(Branch.Task, taskId,req.userId))){
+        res.status(403).send({"err":"You are not authorized to modify that task"})
+    }
+    const updatedTask = await Branch.updateTask(taskId,update);
+    if(updatedTask.err){
+        res.status(500).send({"err":"error updating task" + updatedTask.err});
+    }
+    res.status(200).send(updatedTask);
 })
 
 

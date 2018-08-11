@@ -70,7 +70,7 @@ router.delete('/:id', verifyToken, async (req,res)=>{
         if(eventIndex === -1){
             throw new Error("event was not included in its parent");
         }
-        updatedParent.Events.splice(eventIndex);
+        updatedParent.events.splice(eventIndex);
         await Branch.updateParent(parentType,parentId,updatedParent);
         res.status(200).send(deletedEvent);
     } catch(err) {

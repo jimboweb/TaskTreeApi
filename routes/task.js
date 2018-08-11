@@ -55,23 +55,45 @@ router.get('/:taskId', verifyToken, async (req,res)=>{
 
 /**
  * Delete task and all subtasks recursively
- * @param req.params.id: id of task to delte
+ * @param req.params.id: id of task to delete
  * @return the deleted task or error
- * TODO 180810: delete index from parent
  */
 router.delete('/:id', verifyToken, async (req,res)=>{
     const taskId = req.params.id;
     if(!(await Branch.verifyOwnership(Branch.Task,taskId,req.userId))){
         res.status(403).send({"err":"You are not authorized to delete that task"});
     }
-    const deletedTask = await Branch.deleteTaskRecursive(taskId);
-    if(deletedTask.err){
-        res.status(500).send({"err":"error deleting task" + deletedTask.err});
+    try{
+        const deletedTask = await Branch.deleteTaskRecursive(taskId);
+        if(deletedTask.err){
+            res.status(500).send({"err":"error deleting task" + deletedTask.err});
+        }
+        const parentId = deletedTask.parentId;
+        const parentType = deletedTask.parentType;
+        const updatedParent = Branch.getParent(parentType,parentId);
+        const eventIndex = updatedParent.Events.indexOf(deletedTask._id);
+        if(eventIndex === -1){
+            throw new Error("task was not included in its parent");
+        }
+        updatedParent.tasks.splice(eventIndex);
+        await Branch.updateParent(parentType,parentId,updatedParent);
+        res.status(200).send(deletedTask);
+    } catch(err) {
+        res.status(500).send({'err':`error deleting task: ${err}`});
     }
-    res.status(200).send(deletedTask);
+
 });
 
-
+router.delete('/:id/:newParentType/:newParentId', verifyToken, async(req,res)=>{
+    const id = req.params.id;
+    try {
+        const newParentType = Branch.getParentType(req.params.newParentType);
+        const newParentId = req.params.newParentId;
+        Branch.deleteTaskAndRebaseChildren(id,newParentType,newParentId);
+    } catch (err) {
+        res.status(500).send('error deleting category' + err);
+    }
+});
 
 
 /**

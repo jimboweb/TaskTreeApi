@@ -80,6 +80,17 @@ router.delete('/:id', verifyToken, async (req,res)=>{
     res.status(200).send(deletedCategory);
 });
 
+router.delete('/:id/:newParentType/:newParentId', verifyToken, async(req,res)=>{
+   const id = req.params.id;
+   try {
+       const newParentType = Branch.getParentType(req.params.newParentType);
+       const newParentId = req.params.newParentId;
+       Branch.deleteCategoryAndRebaseChildren(id,newParentType,newParentId);
+   } catch (err) {
+       res.status(500).send('error deleting category' + err);
+   }
+});
+
 router.put('/:id', verifyToken, async (req,res)=>{
     const catId = req.params.id;
     const update = req.body;

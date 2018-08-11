@@ -195,11 +195,11 @@ const getParent=(parentType, parentId)=>{
         const parentTypes = {'category':getCategory,'task': getTask};
         const parentFunction = parentTypes[parentType];
         if(!parentFunction){
-            reject({error:parentType + ' is not a valid parent type'});
+            reject({err:parentType + ' is not a valid parent type'});
         }
         parentFunction.call(this,parentId,(err,result)=>{
             if(err){
-                reject({error:'parent of type ' + parentType + ' with id ' + parentId + ' does not exist'});
+                reject({err:'parent of type ' + parentType + ' with id ' + parentId + ' does not exist'});
             }
             resolve(result);
         });
@@ -327,9 +327,81 @@ const deleteTaskRecursive = async taskId =>{
     return deleteTaskOrCategoryRecursive(Task, taskId);
 };
 
-const deleteTaskAndRebaseChildren = async (taskId, newParentId) => {
-    //TODO 180807: implement deleteTaskAndRebaseChildren
-    return("not implemented");
+/**
+ * Delete task and reassign all its children to a new parent
+ * @param objId the task to delete
+ * @param newParentType the type of the new parent
+ * @param newParentId the id of the new parent
+ * @return {Promise<*>} the updated new parent
+ */
+const deleteTaskOrCategoryAndRebaseChildren = async (objType, objId, newParentType, newParentId) => {
+    try {
+        const deletedObj = await objType.findOneAndRemove({_id:objId});
+        const newParent = await getParent(newParentType, newParentId);
+        const updatedNewParent = await rebaseAllChildren(deletedObj,newParentType,newParent,true);
+        return updatedNewParent;
+    } catch (err){
+        throw new Error('Error deleting task:' + err);
+    }
+};
+
+const deleteCategoryAndRebaseChildren = async (id,newParentType,newParentId)=>{
+    return deleteTaskOrCategoryAndRebaseChildren(Category,id,newParentType,newParentId);
+};
+
+const deleteTaskAndRebaseChildren = async(id,newParentType,newParentId)=>{
+    return deleteTaskOrCategoryAndRebaseChildren(Task,id,newParentType,newParentId);
+}
+
+
+/**
+ * assign a child to a new parent
+ * @param childType: Task or Event
+ * @param parentType Category or Task
+ * @param child child to rebase
+ * @param parent the parent to rebase to
+ * @param oldParentIsDeleted true if old parent has been deleted; if false child will be removed from old parent child index
+ * @return {Promise<void>} updated child
+ */
+const rebaseChild = async (childType, parentType, child, parent, oldParentIsDeleted) => {
+    child.parentId = parent._id;
+    try{
+        if(!oldParentIsDeleted){
+            const oldParentType =  getParentType(child.parentType);
+            const oldParentId = child.parentId;
+            const oldParent = getParent(oldParentType,oldParentId);
+            const oldChildTypeList = childType === Task?oldParent.tasks:oldParent.events;
+            const childOldIndex = oldChildTypeList.indexOf(child);
+            oldChildTypeList.splice(childOldIndex);
+            await oldParentType.findOneAndUpdate({_id:oldParent:_id}, oldParent, {});
+        }
+        await childType.findOneAndUpdate({_id:child._id}, child, {});
+        const childTypeList = childType === Task?parent.tasks:parent.events;
+        childTypeList.push(child);
+        await parentType.findOneAndUpdate({id:parent._id}, parent, {});
+        return child;
+    } catch (err){
+        throw new Error('Error rebasing children:' + err);
+    }
+
+};
+
+const rebaseAllChildren = async (oldParent, newParentType, newParent, oldParentIsDeleted)=>{
+    try{
+        await Promise.all(
+            oldParent.tasks.map(
+                task=>rebaseChild(Task,newParentType,task,newParent,oldParentIsDeleted)
+            )
+        );
+        await Promise.all(
+            oldParent.events.map(
+                event=>rebaseChild(Event, newParentType,event,newParent,oldParentIsDeleted)
+            )
+        );
+    } catch(err){
+        throw new Error('Error rebasing children' + err);
+    }
+    return newParent;
 };
 
 const deleteCategoryRecursive = async catId =>{
@@ -337,11 +409,6 @@ const deleteCategoryRecursive = async catId =>{
 
 };
 
-const deleteCategoryAndRebaseChildren = async (catId, newParentId) => {
-    //TODO 180807: implement deleteCategoryAndRebaseChildren
-    return("not implemented");
-
-};
 
 /**
  * returns a promise
@@ -375,6 +442,8 @@ queries.getTaskRecursive = getTaskRecursive;
 queries.verifyOwnership = verifyOwnership;
 queries.deleteCategoryRecursive = deleteCategoryRecursive;
 queries.deleteTaskRecursive = deleteTaskRecursive;
+queries.deleteTaskAndRebaseChildren = deleteTaskAndRebaseChildren;
+queries.deleteCategoryAndRebaseChildren=deleteCategoryAndRebaseChildren;
 queries.getParentType = getParentType;
 queries.Task = Task;
 queries.Category = Category;

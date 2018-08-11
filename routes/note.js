@@ -38,7 +38,8 @@ router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
 
 /**
  * get note by id
- * @param id: the id of the note to get 
+ * @param id: the id of the note to get
+ * @return the note
  */
 router.get('/:id', verifyToken, async (req,res)=>{
     const id = req.params.id;
@@ -59,7 +60,16 @@ router.delete('/:id', verifyToken, async (req, res)=>{
         res.status(403).send({'err':'you are not authorized to delete that note'});
     }
     try {
-        const note = await Branch.deleteNote(id);
+        const deletedNote = await Branch.deleteNote(id);
+        const parentId = deletedNote.parentId;
+        const parentType = deletedNote.parentType;
+        const updatedParent = Branch.getParent(parentType,parentId);
+        const eventIndex = updatedParent.notes.indexOf(deletedNote._id);
+        if(eventIndex === -1){
+            throw new Error("task was not included in its parent");
+        }
+        updatedParent.tasks.splice(eventIndex);
+        await Branch.updateParent(parentType,parentId,updatedParent);
         res.status(200).send(note);
     } catch(err){
         res.status(500).send('there was an error retrieving that note: ' + err.message)

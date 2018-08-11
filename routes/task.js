@@ -72,7 +72,7 @@ router.delete('/:id', verifyToken, async (req,res)=>{
         const parentId = deletedTask.parentId;
         const parentType = deletedTask.parentType;
         const updatedParent = Branch.getParent(parentType,parentId);
-        const eventIndex = updatedParent.Events.indexOf(deletedTask._id);
+        const eventIndex = updatedParent.tasks.indexOf(deletedTask._id);
         if(eventIndex === -1){
             throw new Error("task was not included in its parent");
         }

@@ -65,7 +65,7 @@ router.delete('/:id', verifyToken, async (req,res)=>{
         const parentId = deletedEvent.parentId;
         const parentType = deletedEvent.parentType;
         const updatedParent = Branch.getParent(parentType,parentId);
-        const eventIndex = updatedParent.Events.indexOf(deletedEvent._id);
+        const eventIndex = updatedParent.events.indexOf(deletedEvent._id);
         if(eventIndex === -1){
             throw new Error("event was not included in its parent");
         }

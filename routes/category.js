@@ -80,12 +80,20 @@ router.delete('/:id', verifyToken, async (req,res)=>{
     res.status(200).send(deletedCategory);
 });
 
+/**
+ * delete category and rebase children to new parent
+ * @param id: id of category to delete
+ * @param newParentType: type of new parent
+ * @param newParentId: id of new parent
+ * @return deleted task;
+ */
 router.delete('/:id/:newParentType/:newParentId', verifyToken, async(req,res)=>{
    const id = req.params.id;
    try {
        const newParentType = Branch.getParentType(req.params.newParentType);
        const newParentId = req.params.newParentId;
-       Branch.deleteCategoryAndRebaseChildren(id,newParentType,newParentId);
+       const deletedCategory = await Branch.deleteCategoryAndRebaseChildren(id,newParentType,newParentId);
+       res.status(200).send(deletedCategory);
    } catch (err) {
        res.status(500).send('error deleting category' + err);
    }

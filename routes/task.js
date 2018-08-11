@@ -26,7 +26,8 @@ router.post('/:parentType/:parentId', verifyToken, (req,res)=>{
             if(err){
                 res.status(500).send("Error creating task: " + err );
             }
-            parent.tasks.push(tsk._id);
+            const taskList = parent.tasks?parent.tasks:parent.subTasks;
+            taskList.push(tsk._id);
             Branch.updateParent(parentType, parentId, parent).then((prnt)=>{
                 res.status(200).send(tsk);
             })

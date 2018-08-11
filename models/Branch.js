@@ -389,7 +389,7 @@ const rebaseChild = async (childType, parentType, child, parent, oldParentIsDele
             const oldChildTypeList = childType === Task?oldParent.tasks:oldParent.events;
             const childOldIndex = oldChildTypeList.indexOf(child);
             oldChildTypeList.splice(childOldIndex);
-            await oldParentType.findOneAndUpdate({_id:oldParent:_id}, oldParent, {});
+            await oldParentType.findOneAndUpdate({_id:oldParent._id}, oldParent, {});
         }
         await childType.findOneAndUpdate({_id:child._id}, child, {});
         const childTypeList = childType === Task?parent.tasks:parent.events;

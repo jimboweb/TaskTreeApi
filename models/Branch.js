@@ -232,7 +232,6 @@ const updateParent = (parentType, parentId, parent)=>{
     })
 }
 
-//FIXME 180806: now the task is being returned as an empty object. i think it's not returning until after it's sent.
 
 const getTaskOrCategoryRecursive = async (type, id)=>{
     const rslt = await type.findOne.call(type, {_id:id},{}, standardOptions, err=>{

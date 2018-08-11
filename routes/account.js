@@ -27,7 +27,6 @@ const registerAccount = (req, res, next) => {
         })
 };
 
-//TODO 180726 oh this should really redirect to /token, and so should login
 /**
  * creates 'user' object which is separate from the account but refers
  * to the account with a userId. user account is the root of the tree.

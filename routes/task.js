@@ -43,14 +43,15 @@ router.post('/:parentType/:parentId', verifyToken, (req,res)=>{
  */
 router.get('/:taskId', verifyToken, async (req,res)=>{
     const taskId = req.params.taskId;
-    if(!(await Branch.verifyOwnership(Branch.Task,taskId,req.userId))) {
-        res.status(403).send({"err": "You are not authorized to get that task"});
+    try{
+        if(!(await Branch.verifyOwnership(Branch.Task,taskId,req.userId))) {
+            res.status(403).send({"err": "You are not authorized to get that task"});
+        }
+        const task = await Branch.getTaskRecursive(taskId);
+        res.status(200).send(task);
+    }  catch(err) {
+        res.status(500).send({'err':`error retrieving task: ${err.message}`});
     }
-    const task = await Branch.getTaskRecursive(taskId);
-    if(task.err){
-        res.status(500).send({"err":task.err});
-    }
-    res.status(200).send(task);
 })
 
 /**
@@ -79,7 +80,7 @@ router.delete('/:id', verifyToken, async (req,res)=>{
         await Branch.updateParent(parentType,parentId,updatedParent);
         res.status(200).send(deletedTask);
     } catch(err) {
-        res.status(500).send({'err':`error deleting task: ${err}`});
+        res.status(500).send({'err':`error deleting task: ${err.message}`});
     }
 
 });
@@ -99,7 +100,7 @@ router.delete('/:id/:newParentType/:newParentId', verifyToken, async(req,res)=>{
         const deletedTask = await Branch.deleteTaskAndRebaseChildren(id,newParentType,newParentId);
         res.status(200).send(deletedTask);
     } catch (err) {
-        res.status(500).send('error deleting category' + err);
+        res.status(500).send('error deleting category' + err.message);
     }
 });
 

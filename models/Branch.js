@@ -112,74 +112,91 @@ const createUser = (user,callback)=>{
 
 const getUser = (id,callback)=>{
     const idQuery = {accountId:id};
-    User.findOne(idQuery,standardOptions,callback);
+    return User.findOne(idQuery,standardOptions,callback);
 }
 const updateUser = (id,obj, callback)=>{
     const idQuery = {accountId:id};
-    User.findOneAndUpdate(idQuery,obj, standardOptions,callback);
+    return User.findOneAndUpdate(idQuery,obj, standardOptions,callback);
 }
 const createCategory = (category,callback)=>{
-    Category.create(category,
+    return Category.create(category,
         callback);
 };
 
 const deleteCategory = (id,callback)=>{
     const idQuery = {_id:id};
-    Category.findOneAndRemove(idQuery,callback);
+    return Category.findOneAndRemove(idQuery,callback);
 };
 
 const updateCategory=(id,obj,callback)=>{
     const idQuery = {_id:id};
-    Category.findOneAndUpdate(idQuery, obj,standardOptions,callback);
+    return Category.findOneAndUpdate(idQuery, obj,standardOptions,callback);
 };
 
 const getCategory = (id,callback) => {
     const idQuery = {_id:id};
-    Category.findOne(idQuery, standardOptions,callback);
+    return Category.findOne(idQuery, standardOptions,callback);
 };
 
 const getAllCategories = (accountId,callback)=>{
     const query = {accountId:accountId};
-    Category.find(query, standardOptions, callback);
+    return Category.find(query, standardOptions, callback);
 };
 
 const getTask = (id,callback)=>{
     const idQuery = {_id:id};
-    Task.findOne(idQuery,standardOptions,callback);
+    return Task.findOne(idQuery,standardOptions,callback);
 };
 
 const createTask  = (task,callback)=>{
-    Task.create(task,callback);
+    return Task.create(task,callback);
 };
 
 const updateTask = (id,obj,callback)=>{
     const idQuery = {_id:id};
-    Task.findOneAndUpdate(idQuery,obj,standardOptions,callback);
+    return Task.findOneAndUpdate(idQuery,obj,standardOptions,callback);
 };
 
 const deleteTask = (id,callback)=>{
     const idQuery = {_id:id};
-    Task.findOneAndRemove(idQuery,callback);
+    return Task.findOneAndRemove(idQuery,callback);
 };
 
 const getEvent=(id,callback)=>{
     const idQuery = {_id:id};
-    Event.findOne(idQuery,standardOptions,callback)
+    return Event.findOne(idQuery,standardOptions,callback)
 };
 
 const createEvent = (event,callback)=>{
-    Event.create(event,callback);
-}
+    return Event.create(event, standardOptions, callback);
+};
 
 const deleteEvent = (id,callback)=>{
     const idQuery = {_id:id};
-    Event.findOneAndRemove(idQuery,callback);
-}
+    return Event.findOneAndRemove(idQuery, standardOptions, callback);
+};
 
 const updateEvent = (id,obj,callback)=>{
     const idQuery = {_id:id};
-    Event.findOneAndUpdate(idQuery,obj,standardOptions,callback);
-}
+    return Event.findOneAndUpdate(idQuery,obj,standardOptions,callback);
+};
+
+const createNote = (note, callback)=>{
+    return Note.create(note, standardOptions, callback);
+};
+
+const getNote =(id,callback)=>{
+    return Note.findOne({_id:id}, standardOptions, callback);
+};
+
+const deleteNote = (id, callback)=>{
+    return Note.findOneAndRemove({_id:id}, standardOptions, callback);
+};
+
+const updateNote=(id, note, callback)=>{
+    return Note.findOneAndUpdate({_id:id},note, standardOptions, callback);
+};
+
 
 
 
@@ -207,7 +224,7 @@ const getParent=(parentType, parentId)=>{
 };
 
 const getParentType=(parentTypeString)=>{
-    const parentTypes = {'category':getCategory,'task': getTask};
+    const parentTypes = {'category':Category,'task': Task, 'event':Event};
     const parentFunction = parentTypes[parentTypeString];
     if(!parentFunction){
         return({'err' : parentTypeString + ' is not a valid parent type'});
@@ -444,6 +461,10 @@ queries.deleteTaskRecursive = deleteTaskRecursive;
 queries.deleteTaskAndRebaseChildren = deleteTaskAndRebaseChildren;
 queries.deleteCategoryAndRebaseChildren=deleteCategoryAndRebaseChildren;
 queries.getParentType = getParentType;
+queries.createNote = createNote;
+queries.getNote = getNote;
+queries.deleteNote = deleteNote;
+queries.updateNote = updateNote;
 queries.Task = Task;
 queries.Category = Category;
 queries.Event = Event;

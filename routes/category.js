@@ -95,7 +95,7 @@ router.delete('/:id/:newParentType/:newParentId', verifyToken, async(req,res)=>{
        const deletedCategory = await Branch.deleteCategoryAndRebaseChildren(id,newParentType,newParentId);
        res.status(200).send(deletedCategory);
    } catch (err) {
-       res.status(500).send('error deleting category' + err);
+       res.status(500).send('error deleting category' + err.message);
    }
 });
 

@@ -26,9 +26,8 @@ router.get(':/id', verifyToken, async (req,res)=>{
  * @param req.params.parentId: id of parent
  * @return created event
  */
-router.post('/parentType/:parentId', verifyToken, async (req,res)=>{
-    const parentTypes = {'category':getCategory,'task': getTask};
-    const parentFunction = parentTypes[req.params.parentType];
+router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
+    const parentFunction = Branch.getParentType(req.params.parentType)
     const parentId = req.params.parentId;
     const newEvent = req.body;
     if(!parentFunction){
@@ -41,13 +40,13 @@ router.post('/parentType/:parentId', verifyToken, async (req,res)=>{
     try {
         const parent = await Branch.getParent(parentFunction,parentId);
         const event = await Branch.createEvent(newEvent,err=>{
-            res.status(403).send({"err":`error creating event: ${err}`});
+            res.status(403).send({"err":`error creating event: ${err.message}`});
         });
         parent.events.push(event);
         await Branch.updateParent(parentFunction, parentId, parent);
         res.status(200).send(event);
     } catch(err) {
-        res.status(500).send({'err':`error creating event: ${err}`});
+        res.status(500).send({'err':`error creating event: ${err.message}`});
     }
 });
 
@@ -74,7 +73,7 @@ router.delete('/:id', verifyToken, async (req,res)=>{
         await Branch.updateParent(parentType,parentId,updatedParent);
         res.status(200).send(deletedEvent);
     } catch(err) {
-        res.status(500).send({'err':`error deleting event: ${err}`});
+        res.status(500).send({'err':`error deleting event: ${err.message}`});
     }
 })
 

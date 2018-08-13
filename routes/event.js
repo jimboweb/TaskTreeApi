@@ -40,10 +40,9 @@ router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
 
     try {
         const parent = await Branch.getParentByType(parentFunction,parentId);
-        const event = await Branch.createEvent(newEvent,err=>{
-            res.status(403).send({"err":`error creating event: ${err.message}`});
-        });
-        parent.events.push(event);
+        //FIXME 180813 - getting error error creating event: Cast to ObjectId failed for value
+        const event = await Branch.createEvent(newEvent);
+        parent.events.push(event._id);
         await Branch.updateParent(parentFunction, parentId, parent);
         res.status(200).send(event);
     } catch(err) {

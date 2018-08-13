@@ -58,7 +58,7 @@ const taskSchema = Schema({
     prqTask: [{type: Schema.Types.ObjectId, ref: 'Task'}],
     prqEvent: [{type: Schema.Types.ObjectId, ref: 'Event'}],
     estTime: Number,
-    accountId: String,
+    accountId: String
 });
 
 /**
@@ -76,7 +76,7 @@ const eventSchema = Schema({
     parentType: String,
     completed: Boolean,
     prevDates: [Date],
-    accountId: String,
+    accountId: String
 })
 
 const noteSchema = Schema({
@@ -246,12 +246,21 @@ const getParentType=(parentTypeString)=>{
 
 const updateParent = (parentType, parentId, parent)=>{
     return new Promise((resolve, reject)=>{
-        const parentTypes = {'category':updateCategory,'task': updateTask};
-        const parentFunction = parentTypes[parentType];
+        let parentFunction = null;
+        if(parentType.type === String){
+            const parentTypes = {'category':updateCategory,'task': updateTask};
+            const parentFunction = parentTypes[parentType];
+        } else {
+            if(parentType === Category){
+                parentFunction = updateCategory;
+            } else if (parentType === Task){
+                parentFunction = updateTask;
+            }
+        }
         if(!parentFunction){
             reject({"err":parentType + ' is not a valid parent type'});
         }
-        parentFunction.call(this,parentId,parent,(err,prnt)=>{
+        parentFunction.call(this,{_id:parentId},parent,(err,prnt)=>{
             if(err){
                 reject({error:'unable to add new task to parent'});
             }
@@ -335,7 +344,7 @@ const deleteAllTasksRecursive = async(taskIds)=>{
 const verifyOwnership = async (type, id, accountId)=>{
     try {
         const obj = await getParentByType(type, id);
-        return await Permissions.checkObjectPermissions(obj.accountId, accountId);
+        return Permissions.checkObjectPermissions(obj.accountId, accountId);
     } catch (err) {
         throw new Error("unable to get parent");
     }
@@ -462,6 +471,7 @@ queries.getEvent = getEvent;
 queries.updateUser = updateUser;
 queries.getAllCategories = getAllCategories;
 queries.getParent = getParentByString;
+queries.getParentByType = getParentByType;
 queries.updateParent = updateParent;
 queries.getCategoryRecursive = getCategoryRecursive;
 queries.getTaskRecursive = getTaskRecursive;

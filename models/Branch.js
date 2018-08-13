@@ -335,7 +335,7 @@ const deleteAllTasksRecursive = async(taskIds)=>{
 const verifyOwnership = async (type, id, accountId)=>{
     try {
         const obj = await getParentByType(type, id);
-        return Permissions.checkObjectPermissions(obj.accountId, accountId);
+        return await Permissions.checkObjectPermissions(obj.accountId, accountId);
     } catch (err) {
         throw new Error("unable to get parent");
     }

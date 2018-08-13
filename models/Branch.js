@@ -226,7 +226,7 @@ const getParentByString=(parentType, parentId)=>{
 const getParentByType=async (parentType, parentId)=>{
     const getFunction = parentType.findOne;
     const query = {_id:parentId};
-    const rtrn = await getFunction.call(parentType,query,err=>{
+    const rtrn = await getFunction.call(parentType, query,standardOptions, {}, err=>{
         if(err){
             throw new Error(`parent of type ${parentType} with id ${parentId} does not exist`);
         }
@@ -333,8 +333,12 @@ const deleteAllTasksRecursive = async(taskIds)=>{
 
 
 const verifyOwnership = async (type, id, accountId)=>{
-    const obj = await getParentByType(type, id);
-    return Permissions.checkObjectPermissions(obj.accountId, accountId);
+    try {
+        const obj = await getParentByType(type, id);
+        return Permissions.checkObjectPermissions(obj.accountId, accountId);
+    } catch (err) {
+        throw new Error("unable to get parent");
+    }
 };
 
 /**

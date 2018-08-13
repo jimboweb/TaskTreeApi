@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-
+const Permissions = require('../auth/permissions');
 
 const standardOptions = {/*lean:true*/};
 
@@ -207,7 +207,7 @@ const updateNote=(id, note, callback)=>{
  * @param parentId _id value of parent
  * @returns resolve - the parent category or task object/reject - error message
  */
-const getParent=(parentType, parentId)=>{
+const getParentByString=(parentType, parentId)=>{
     return new Promise((resolve, reject)=>{
         const parentTypes = {'category':getCategory,'task': getTask};
         const parentFunction = parentTypes[parentType];
@@ -221,6 +221,17 @@ const getParent=(parentType, parentId)=>{
             resolve(result);
         });
     })
+};
+
+const getParentByType=async (parentType, parentId)=>{
+    const getFunction = parentType.findOne;
+    const query = {_id:parentId};
+    const rtrn = await getFunction.call(parentType,query,err=>{
+        if(err){
+            throw new Error(`parent of type ${parentType} with id ${parentId} does not exist`);
+        }
+    });
+    return rtrn;
 };
 
 const getParentType=(parentTypeString)=>{
@@ -322,13 +333,8 @@ const deleteAllTasksRecursive = async(taskIds)=>{
 
 
 const verifyOwnership = async (type, id, accountId)=>{
-    const obj = await type.findOne({_id:id}, err=>{
-        return false;
-    }).select({"accountId":1});
-    if(obj){
-        return obj.accountId ===accountId;
-    }
-    return false;
+    const obj = await getParentByType(type, id);
+    return Permissions.checkObjectPermissions(obj.accountId, accountId);
 };
 
 /**
@@ -353,7 +359,7 @@ const deleteTaskRecursive = async taskId =>{
 const deleteTaskOrCategoryAndRebaseChildren = async (objType, objId, newParentType, newParentId) => {
     try {
         const deletedObj = await objType.findOneAndRemove({_id:objId});
-        const newParent = await getParent(newParentType, newParentId);
+        const newParent = await getParentByString(newParentType, newParentId);
         const updatedNewParent = await rebaseAllChildren(deletedObj,newParentType,newParent,true);
         return updatedNewParent;
     } catch (err){
@@ -385,7 +391,7 @@ const rebaseChild = async (childType, parentType, child, parent, oldParentIsDele
         if(!oldParentIsDeleted){
             const oldParentType =  getParentType(child.parentType);
             const oldParentId = child.parentId;
-            const oldParent = getParent(oldParentType,oldParentId);
+            const oldParent = getParentByString(oldParentType,oldParentId);
             const oldChildTypeList = childType === Task?oldParent.tasks:oldParent.events;
             const childOldIndex = oldChildTypeList.indexOf(child);
             oldChildTypeList.splice(childOldIndex);
@@ -451,7 +457,7 @@ queries.updateEvent = updateEvent;
 queries.getEvent = getEvent;
 queries.updateUser = updateUser;
 queries.getAllCategories = getAllCategories;
-queries.getParent = getParent;
+queries.getParent = getParentByString;
 queries.updateParent = updateParent;
 queries.getCategoryRecursive = getCategoryRecursive;
 queries.getTaskRecursive = getTaskRecursive;

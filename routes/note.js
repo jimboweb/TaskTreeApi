@@ -24,7 +24,7 @@ router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
     }
 
     try {
-        const parent = await Branch.getParent(parentFunction,parentId);
+        const parent = await Branch.getParentByType(parentFunction,parentId);
         const event = await Branch.createNote(newNote,err=>{
             res.status(403).send({"err":`error creating event: ${err.message}`});
         });
@@ -63,7 +63,7 @@ router.delete('/:id', verifyToken, async (req, res)=>{
         const deletedNote = await Branch.deleteNote(id);
         const parentId = deletedNote.parentId;
         const parentType = deletedNote.parentType;
-        const updatedParent = Branch.getParent(parentType,parentId);
+        const updatedParent = Branch.getParentByType(parentType,parentId);
         const eventIndex = updatedParent.notes.indexOf(deletedNote._id);
         if(eventIndex === -1){
             throw new Error("task was not included in its parent");

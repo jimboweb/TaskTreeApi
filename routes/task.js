@@ -7,14 +7,14 @@ const Permissions = require('../auth/permissions');
 // language=JavaScript 1.8
 /**
  * Add task to a category or parent
- * @parentType 'Task' or 'Category'
+ * @param parentType 'Task' or 'Category'
  * @param req.params.parentId: the id of the parent
  * @return added task
  */
 router.post('/:parentType/:parentId', verifyToken, (req,res)=>{
     const parentId = req.params.parentId;
     const parentType = req.params.parentType;
-    Branch.getParent(parentType,parentId).then((result)=>{
+    Branch.getParentByType(parentType,parentId).then((result)=>{
         if(!Permissions.checkObjectPermissions(result.accountId,req.userId)){
             res.status(403).send('You do not have access to that parent object');
         }
@@ -72,7 +72,7 @@ router.delete('/:id', verifyToken, async (req,res)=>{
         }
         const parentId = deletedTask.parentId;
         const parentType = deletedTask.parentType;
-        const updatedParent = Branch.getParent(parentType,parentId);
+        const updatedParent = Branch.getParentByType(parentType,parentId);
         const eventIndex = updatedParent.tasks.indexOf(deletedTask._id);
         if(eventIndex === -1){
             throw new Error("task was not included in its parent");

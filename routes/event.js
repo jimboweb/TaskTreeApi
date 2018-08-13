@@ -3,6 +3,7 @@ const router = express.Router();
 const verifyToken = require('../auth/verifyToken');
 const Branch = require('../models/Branch');
 
+
 /**
  * get event by id
  * @param req.params.id: id of event
@@ -33,12 +34,12 @@ router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
     if(!parentFunction){
         res.status(500).send({'err':`${parentFunction} is not a valid parent type`});
     }
-    if(!(await Branch.verifyOwnership(parentFunction,parentId))){
+    if(!(await Branch.verifyOwnership(parentFunction,parentId, req.userId))){
         res.status(403).send({'err':'you are not authorized to add to that parent'});
     }
 
     try {
-        const parent = await Branch.getParent(parentFunction,parentId);
+        const parent = await Branch.getParentByType(parentFunction,parentId);
         const event = await Branch.createEvent(newEvent,err=>{
             res.status(403).send({"err":`error creating event: ${err.message}`});
         });
@@ -64,7 +65,7 @@ router.delete('/:id', verifyToken, async (req,res)=>{
         const deletedEvent = await Branch.deleteEvent(eventId);
         const parentId = deletedEvent.parentId;
         const parentType = deletedEvent.parentType;
-        const updatedParent = Branch.getParent(parentType,parentId);
+        const updatedParent = Branch.getParentByType(parentType,parentId);
         const eventIndex = updatedParent.events.indexOf(deletedEvent._id);
         if(eventIndex === -1){
             throw new Error("event was not included in its parent");

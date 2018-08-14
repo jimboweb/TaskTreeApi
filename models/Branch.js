@@ -168,6 +168,7 @@ const getEvent=(id,callback)=>{
 };
 
 const createEvent = (event,callback)=>{
+    //FIXME 180814: this should be new Event(event).save or something like that because it's returing an array
     return Event.create(event, standardOptions, callback);
 };
 

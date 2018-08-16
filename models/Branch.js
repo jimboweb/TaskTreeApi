@@ -20,7 +20,7 @@ const userSchema = Schema ({
  * Category is top level branch from User. Categories can never be
  * completed. All Tasks and Events are in categories.
  * Examples of Categories are 'work', 'household'. There
- * will be some default category of 'General' for users who don't
+ * will be some default category of 'uncategorized' for users who don't
  * want to think about categories.
  */
 const categorySchema = Schema({

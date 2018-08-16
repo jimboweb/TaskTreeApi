@@ -106,7 +106,7 @@ const createUser = (user,callback)=>{
                 email:user.email,
                 categories:[catId]
             });
-            User.create(newUser,callback);
+            return User.save(newUser,callback);
         })
 };
 
@@ -119,8 +119,8 @@ const updateUser = (id,obj, callback)=>{
     return User.findOneAndUpdate(idQuery,obj, standardOptions,callback);
 }
 const createCategory = (category,callback)=>{
-    return Category.create(category,
-        callback);
+    const newCategory = new Category(category);
+    return newCategory.save(callback);
 };
 
 const deleteCategory = (id,callback)=>{
@@ -168,8 +168,9 @@ const getEvent=(id,callback)=>{
 };
 
 const createEvent = (event,callback)=>{
-    //FIXME 180814: this should be new Event(event).save or something like that because it's returing an array
-    return Event.create(event, standardOptions, callback);
+    const newEvent = new Event(event);
+    return newEvent.save(callback);
+
 };
 
 const deleteEvent = (id,callback)=>{
@@ -183,7 +184,8 @@ const updateEvent = (id,obj,callback)=>{
 };
 
 const createNote = (note, callback)=>{
-    return Note.create(note, standardOptions, callback);
+    const newNote = new Note(note);
+    return newNote.save(callback);
 };
 
 const getNote =(id,callback)=>{
@@ -374,8 +376,7 @@ const deleteTaskOrCategoryAndRebaseChildren = async (objType, objId, newParentTy
     try {
         const deletedObj = await objType.findOneAndRemove({_id:objId});
         const newParent = await getParentByString(newParentType, newParentId);
-        const updatedNewParent = await rebaseAllChildren(deletedObj,newParentType,newParent,true);
-        return updatedNewParent;
+        return await rebaseAllChildren(deletedObj, newParentType, newParent, true);
     } catch (err){
         throw new Error('Error deleting task:' + err);
     }

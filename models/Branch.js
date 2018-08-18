@@ -88,7 +88,7 @@ const User = mongoose.model('User', userSchema);
 const Category = mongoose.model('Category', categorySchema);
 const Task = mongoose.model('Task', taskSchema);
 const Event = mongoose.model('Event', eventSchema);
-const Note = mongoose.model('Note', userSchema);
+const Note = mongoose.model('Note', noteSchema);
 
 //TODO someday: do the following with some kind of createObject thunk
 const createUser = (user,callback)=>{

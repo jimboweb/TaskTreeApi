@@ -84,7 +84,7 @@ const noteSchema = Schema({
     note: String,
     accountId: String,
     parentType: String,
-    parent: Schema.Types.ObjectId;
+    parent: Schema.Types.ObjectId
 });
 
 const User = mongoose.model('User', userSchema);
@@ -261,6 +261,8 @@ const updateParent = (parentType, parentId, parent)=>{
                 parentFunction = updateCategory;
             } else if (parentType === Task){
                 parentFunction = updateTask;
+            } else if (parentType === Event) {
+                parentFunction = updateEvent;
             }
         }
         if(!parentFunction){

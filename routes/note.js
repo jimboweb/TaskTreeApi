@@ -25,10 +25,10 @@ router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
 
     try {
         const parent = await Branch.getParentByType(parentFunction,parentId);
+        newNote.accountId=req.userId;
+        newNote.parent = parent._id;
+        newNote.parentType = req.params.parentType;
         const note = await Branch.createNote(newNote);
-        note.accountId=req.userId;
-        note.parent = parent._id;
-        note.parentType = req.params.parentType;
         parent.notes.push(note._id);
         await Branch.updateParent(parentFunction, parentId, parent);
         res.status(200).send(note);

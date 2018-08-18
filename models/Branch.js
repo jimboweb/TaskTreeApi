@@ -81,7 +81,10 @@ const eventSchema = Schema({
 
 const noteSchema = Schema({
     dateStamp: Date,
-    note: String
+    note: String,
+    accountId: String,
+    parentType: String,
+    parent: Schema.Types.ObjectId;
 });
 
 const User = mongoose.model('User', userSchema);

@@ -25,8 +25,10 @@ router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
 
     try {
         const parent = await Branch.getParentByType(parentFunction,parentId);
-        //FIXME 180817: it is creating the note but returning null. is this an async issue? didn't happen with event
         const note = await Branch.createNote(newNote);
+        note.accountId=req.userId;
+        note.parent = parent._id;
+        note.parentType = req.params.parentType;
         parent.notes.push(note._id);
         await Branch.updateParent(parentFunction, parentId, parent);
         res.status(200).send(note);

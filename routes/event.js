@@ -20,7 +20,7 @@ router.get(':/id', verifyToken, async (req,res)=>{
     res.status(200).send(event);
 });
 
-
+//FIXME 180818: events don't have accountId or parentId
 /**
  * Creates event and adds to task or category
  * @param req.params.parentType: 'Task' or 'Category'
@@ -40,6 +40,9 @@ router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
 
     try {
         const parent = await Branch.getParentByType(parentFunction,parentId);
+        newEvent.accountId=req.userId;
+        newEvent.parent = parent._id;
+        newEvent.parentType = req.params.parentType;
         const event = await Branch.createEvent(newEvent);
         parent.events.push(event._id);
         await Branch.updateParent(parentFunction, parentId, parent);

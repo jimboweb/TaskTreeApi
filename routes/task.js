@@ -22,6 +22,7 @@ router.post('/:parentType/:parentId', verifyToken, (req,res)=>{
         const task = req.body;
         task.accountId=req.userId;
         task.parent = parent._id;
+        task.parentType = req.params.parentType;
         Branch.createTask(task,(err,tsk)=>{
             if(err){
                 res.status(500).send("Error creating task: " + err );

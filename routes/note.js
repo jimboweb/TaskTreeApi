@@ -19,18 +19,17 @@ router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
     if(!parentFunction){
         res.status(500).send({'err':`${parentFunction} is not a valid parent type`});
     }
-    if(!(await Branch.verifyOwnership(parentFunction,parentId))){
+    if(!(await Branch.verifyOwnership(parentFunction,parentId, req.userId))){
         res.status(403).send({'err':'you are not authorized to add to that parent'});
     }
 
     try {
         const parent = await Branch.getParentByType(parentFunction,parentId);
-        const event = await Branch.createNote(newNote,err=>{
-            res.status(403).send({"err":`error creating event: ${err.message}`});
-        });
-        parent.notes.push(event);
+        //FIXME 180817: it is creating the note but returning null. is this an async issue? didn't happen with event
+        const note = await Branch.createNote(newNote);
+        parent.notes.push(note._id);
         await Branch.updateParent(parentFunction, parentId, parent);
-        res.status(200).send(event);
+        res.status(200).send(note);
     } catch(err) {
         res.status(500).send({'err':`error creating note: ${err.message}`});
     }

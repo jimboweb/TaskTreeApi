@@ -62,17 +62,17 @@ router.delete('/:id', verifyToken, async (req, res)=>{
     } else { //TODO 180819: add this `else` to all the other verifyOwnership or it'll still go ahead and do the action wtihout permission
         try {
             const deletedNote = await Branch.deleteNote(id);
-            const parentId = deletedNote.parent;
-            const parentType = deletedNote.parentType;
-            const updatedParent = Branch.getParentByType(parentType, parentId);
-            //FIXME 180819: "Cannot read property 'indexOf' of undefined"
-            const eventIndex = updatedParent.notes.indexOf(deletedNote._id);
+            const parentId = deletedNote.parent.toString();
+            const parentType = Branch.getParentType(deletedNote.parentType);
+            const updatedParent = await Branch.getParentByType(parentType, parentId);
+            const parentNotes = updatedParent.notes;
+            const eventIndex = parentNotes.indexOf(deletedNote._id);
             if (eventIndex === -1) {
                 throw new Error("task was not included in its parent");
             }
-            updatedParent.tasks.splice(eventIndex);
+            parentNotes.splice(eventIndex);
             await Branch.updateParent(parentType, parentId, updatedParent);
-            res.status(200).send(note);
+            res.status(200).send(deletedNote);
         } catch (err) {
             res.status(500).send({'err':'there was an error deleting that note: ' + err.message})
         }

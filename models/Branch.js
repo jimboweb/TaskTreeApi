@@ -232,11 +232,7 @@ const getParentByString=(parentType, parentId)=>{
 const getParentByType=async (parentType, parentId)=>{
     const getFunction = parentType.findOne;
     const query = {_id:parentId};
-    const rtrn = await getFunction.call(parentType, query,standardOptions, {}, err=>{
-        if(err){
-            throw new Error(`parent of type ${parentType} with id ${parentId} does not exist`);
-        }
-    });
+    const rtrn = await getFunction.call(parentType, query);
     return rtrn;
 };
 

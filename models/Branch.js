@@ -248,21 +248,18 @@ const getParentType=(parentTypeString)=>{
 
 const updateParent = (parentType, parentId, parent)=>{
     return new Promise((resolve, reject)=>{
-        let parentFunction = null;
-        if(parentType.type === String){
-            const parentTypes = {'category':updateCategory,'task': updateTask};
-            const parentFunction = parentTypes[parentType];
+        let parentFunction;
+        if(parentType === Category){
+            parentFunction = updateCategory;
+        } else if (parentType === Task){
+            parentFunction = updateTask;
+        } else if (parentType === Event) {
+            parentFunction = updateEvent;
         } else {
-            if(parentType === Category){
-                parentFunction = updateCategory;
-            } else if (parentType === Task){
-                parentFunction = updateTask;
-            } else if (parentType === Event) {
-                parentFunction = updateEvent;
-            }
+            throw new Error(`${parentType} is not a valid parent type`)
         }
         if(!parentFunction){
-            reject({"err":parentType + ' is not a valid parent type'});
+            reject({'err':`${parentType} is not a valid parent type`});
         }
         parentFunction.call(this,{_id:parentId},parent,(err,prnt)=>{
             if(err){

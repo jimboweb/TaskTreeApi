@@ -66,7 +66,11 @@ passport.deserializeUser(Account.deserializeUser());
 const uri = db.makeDbUri(dbPrtcl, dbUser, dbPw, dbStr);
 mongoose.connection.on('connected',()=>{console.log("connected to mongodb")});
 console.log('uri = ' + uri);
-mongoose.connect(uri,{ useNewUrlParser: true });
+try {
+    mongoose.connect(uri, {useNewUrlParser: true});
+}catch (e) {
+    console.error("failed to connect to mongodb");
+}
 
 
 // error handler

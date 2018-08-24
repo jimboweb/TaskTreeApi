@@ -19,21 +19,21 @@ router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
     if(!parentFunction){
         res.status(500).send({'err':`${parentFunction} is not a valid parent type`});
     }
-    if(!(await Branch.verifyOwnership(parentFunction,parentId, req.userId))){
-        res.status(403).send({'err':'you are not authorized to add to that parent'});
-    }
-
-    try {
-        const parent = await Branch.getParentByType(parentFunction,parentId);
-        newNote.accountId=req.userId;
-        newNote.parent = parent._id;
-        newNote.parentType = req.params.parentType;
-        const note = await Branch.createNote(newNote);
-        parent.notes.push(note._id);
-        await Branch.updateParent(parentFunction, parentId, parent);
-        res.status(200).send(note);
-    } catch(err) {
-        res.status(500).send({'err':`error creating note: ${err.message}`});
+    if(!(await Branch.verifyOwnership(parentFunction,parentId, req.userId))) {
+        res.status(403).send({'err': 'you are not authorized to add to that parent'});
+    }else {
+        try {
+            const parent = await Branch.getParentByType(parentFunction, parentId);
+            newNote.accountId = req.userId;
+            newNote.parent = parent._id;
+            newNote.parentType = req.params.parentType;
+            const note = await Branch.createNote(newNote);
+            parent.notes.push(note._id);
+            await Branch.updateParent(parentFunction, parentId, parent);
+            res.status(200).send(note);
+        } catch (err) {
+            res.status(500).send({'err': `error creating note: ${err.message}`});
+        }
     }
 });
 
@@ -46,13 +46,14 @@ router.get('/:id', verifyToken, async (req,res)=>{
     const id = req.params.id;
     if(!(await Branch.verifyOwnership(Branch.Note,id))){
         res.status(403).send({'err':'you are not authorized to retrieve that note'});
+    } else {
+        try {
+            const note = await Branch.getNote(id);
+            res.status(200).send(note);
+        } catch (err) {
+            res.status(500).send('there was an error retrieving that note: ' + err.message)
+        }
     }
-   try {
-       const note = await Branch.getNote(id);
-       res.status(200).send(note);
-   } catch(err){
-       res.status(500).send('there was an error retrieving that note: ' + err.message)
-   }
 });
 
 router.delete('/:id', verifyToken, async (req, res)=>{
@@ -68,7 +69,7 @@ router.delete('/:id', verifyToken, async (req, res)=>{
             const parentNotes = updatedParent.notes;
             const eventIndex = parentNotes.indexOf(deletedNote._id);
             if (eventIndex === -1) {
-                throw new Error("task was not included in its parent");
+                res.status(500).send({"err":"task was not included in its parent"});
             }
             parentNotes.splice(eventIndex);
             await Branch.updateParent(parentType, parentId, updatedParent);
@@ -85,11 +86,13 @@ router.put('/:id', verifyToken, async (req,res)=>{
     if(!(await Branch.verifyOwnership(Branch.Note,id))){
         res.status(403).send({'err':'you are not authorized to modify that note'});
     }
-    try {
-        const note = await Branch.updateNote(id, newNote);
-        res.status(200).send(note);
-    } catch(err){
-        res.status(500).send('there was an error retrieving that note: ' + err.message)
+    else {
+        try {
+            const note = await Branch.updateNote(id, newNote);
+            res.status(200).send(note);
+        } catch (err) {
+            res.status(500).send('there was an error retrieving that note: ' + err.message)
+        }
     }
 
 });

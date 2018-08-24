@@ -13,11 +13,12 @@ router.get(':/id', verifyToken, async (req,res)=>{
     const eventId = req.params.id;
     if(!(await Branch.verifyOwnership(Branch.Event,eventId))){
         res.status(403).send({"err":"You are not authorized to get that event"});
+    } else {
+        const event = await Branch.getEvent(eventId, err => {
+            res.status(500).send({"err": `error retrieving event: ${err}`});
+        });
+        res.status(200).send(event);
     }
-    const event = await Branch.getEvent(eventId, err=>{
-        res.status(500).send({"err":`error retrieving event: ${err}`});
-    });
-    res.status(200).send(event);
 });
 
 //FIXME 180818: events don't have accountId or parentId
@@ -37,18 +38,19 @@ router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
     if(!(await Branch.verifyOwnership(parentFunction,parentId, req.userId))){
         res.status(403).send({'err':'you are not authorized to add to that parent'});
     }
-
-    try {
-        const parent = await Branch.getParentByType(parentFunction,parentId);
-        newEvent.accountId=req.userId;
-        newEvent.parent = parent._id;
-        newEvent.parentType = req.params.parentType;
-        const event = await Branch.createEvent(newEvent);
-        parent.events.push(event._id);
-        await Branch.updateParent(parentFunction, parentId, parent);
-        res.status(200).send(event);
-    } catch(err) {
-        res.status(500).send({'err':`error creating event: ${err.message}`});
+    else {
+        try {
+            const parent = await Branch.getParentByType(parentFunction, parentId);
+            newEvent.accountId = req.userId;
+            newEvent.parent = parent._id;
+            newEvent.parentType = req.params.parentType;
+            const event = await Branch.createEvent(newEvent);
+            parent.events.push(event._id);
+            await Branch.updateParent(parentFunction, parentId, parent);
+            res.status(200).send(event);
+        } catch (err) {
+            res.status(500).send({'err': `error creating event: ${err.message}`});
+        }
     }
 });
 
@@ -61,21 +63,22 @@ router.delete('/:id', verifyToken, async (req,res)=>{
     const eventId = req.params.id;
     if(!(await Branch.verifyOwnership(Branch.Event, eventId,req.userId))){
         res.status(403).send({'err':'You are not authorized to delete that event'});
-    }
-    try{
-        const deletedEvent = await Branch.deleteEvent(eventId);
-        const parentId = deletedEvent.parentId;
-        const parentType = deletedEvent.parentType;
-        const updatedParent = Branch.getParentByType(parentType,parentId);
-        const eventIndex = updatedParent.events.indexOf(deletedEvent._id);
-        if(eventIndex === -1){
-            throw new Error("event was not included in its parent");
+    } else {
+        try {
+            const deletedEvent = await Branch.deleteEvent(eventId);
+            const parentId = deletedEvent.parentId;
+            const parentType = deletedEvent.parentType;
+            const updatedParent = Branch.getParentByType(parentType, parentId);
+            const eventIndex = updatedParent.events.indexOf(deletedEvent._id);
+            if (eventIndex === -1) {
+                throw new Error("event was not included in its parent");
+            }
+            updatedParent.events.splice(eventIndex);
+            await Branch.updateParent(parentType, parentId, updatedParent);
+            res.status(200).send(deletedEvent);
+        } catch (err) {
+            res.status(500).send({'err': `error deleting event: ${err.message}`});
         }
-        updatedParent.events.splice(eventIndex);
-        await Branch.updateParent(parentType,parentId,updatedParent);
-        res.status(200).send(deletedEvent);
-    } catch(err) {
-        res.status(500).send({'err':`error deleting event: ${err.message}`});
     }
 })
 

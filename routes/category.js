@@ -5,12 +5,7 @@ const userController = require('./user');
 const Branch = require('../models/Branch');
 const Permissions = require('../auth/permissions');
 
-//TODO 180729:
-// create '/' get route to get all categories
-// '/:id' GET route for specific category
-// '/:id' PUT route to update category
-// '/:id' DELETE route
-// (maybe get rid of 'add' in route since post is automatically add)
+//TODO 180824: refactor the first three category routes using 'await' and add the verifyownership step
 
 /**
  * body of request should be category as json object
@@ -72,12 +67,13 @@ router.get('/:id', verifyToken, async (req,res)=>{
 router.delete('/:id', verifyToken, async (req,res)=>{
     if(!(await Branch.verifyOwnership(Branch.Category, req.params.id, req.userId))){
         res.status(403).send({"err":"You are not authorized to delete that category"});
+    } else {
+        const deletedCategory = await Branch.deleteCategoryRecursive(req.params.id);
+        if (deletedCategory.err) {
+            res.status(500).send({"err": "error deleting category" + deletedCategory.err});
+        }
+        res.status(200).send(deletedCategory);
     }
-    const deletedCategory = await Branch.deleteCategoryRecursive(req.params.id);
-    if(deletedCategory.err){
-        res.status(500).send({"err":"error deleting category" + deletedCategory.err});
-    }
-    res.status(200).send(deletedCategory);
 });
 
 /**
@@ -89,14 +85,18 @@ router.delete('/:id', verifyToken, async (req,res)=>{
  */
 router.delete('/:id/:newParentType/:newParentId', verifyToken, async(req,res)=>{
    const id = req.params.id;
-   try {
-       const newParentType = Branch.getParentType(req.params.newParentType);
-       const newParentId = req.params.newParentId;
-       const deletedCategory = await Branch.deleteCategoryAndRebaseChildren(id,newParentType,newParentId);
-       res.status(200).send(deletedCategory);
-   } catch (err) {
-       res.status(500).send('error deleting category' + err.message);
-   }
+    if(!(await Branch.verifyOwnership(Branch.Category, req.params.id, req.userId))){
+        res.status(403).send({"err":"You are not authorized to delete that category"});
+    } else {
+        try {
+            const newParentType = Branch.getParentType(req.params.newParentType);
+            const newParentId = req.params.newParentId;
+            const deletedCategory = await Branch.deleteCategoryAndRebaseChildren(id, newParentType, newParentId);
+            res.status(200).send(deletedCategory);
+        } catch (err) {
+            res.status(500).send('error deleting category' + err.message);
+        }
+    }
 });
 
 router.put('/:id', verifyToken, async (req,res)=>{
@@ -104,12 +104,13 @@ router.put('/:id', verifyToken, async (req,res)=>{
     const update = req.body;
     if(!(await Branch.verifyOwnership(Branch.Category, catId,req.userId))){
         res.status(403).send({"err":"You are not authorized to modify that Category"})
+    } else {
+        const updatedCategory = await Branch.updateCategory(catId, update);
+        if (updatedCategory.err) {
+            res.status(500).send({"err": "error updating category" + updatedCategory.err});
+        }
+        res.status(200).send(updatedCategory);
     }
-    const updatedCategory = await Branch.updateCategory(catId,update);
-    if(updatedCategory.err){
-        res.status(500).send({"err":"error updating category" + updatedCategory.err});
-    }
-    res.status(200).send(updatedCategory);
 })
 
 module.exports=router;

@@ -285,11 +285,7 @@ const getTaskOrCategoryRecursive = async (type, id)=>{
     result.children.tasks = await getAllTasksRecursive(tasks);
     result.children.events = events.map(async eventId=>{
         const eventIdString = eventId.toString();
-        await Event.findOne({_id:eventIdString}, standardOptions,err=>{
-            if(err){
-                return({err: err});
-            }
-        });
+        await Event.findOne({_id:eventIdString});
     });
     return result;
 
@@ -297,11 +293,7 @@ const getTaskOrCategoryRecursive = async (type, id)=>{
 };
 
 const deleteTaskOrCategoryRecursive = async (type, id)=>{
-    const rslt = await type.findOneAndRemove.call(type, {_id:id},{}, standardOptions, err=>{
-        if(err){
-            return({err: err});
-        }
-    });
+    const rslt = await type.findOneAndRemove.call(type, {_id:id});
     const result = rslt.toObject();
     const tasks = result.tasks?result.tasks:result.subTasks;
     const events = result.events;
@@ -309,11 +301,7 @@ const deleteTaskOrCategoryRecursive = async (type, id)=>{
     result.children.tasks = await deleteAllTasksRecursive(tasks);
     result.children.events = events.map(async eventId=>{
         const eventIdString = eventId.toString();
-        await Event.findOneAndRemove({_id:eventIdString}, standardOptions,err=>{
-            if(err){
-                return({err: err});
-            }
-        });
+        await Event.findOneAndRemove({_id:eventIdString});
     });
     return result;
 
@@ -323,7 +311,7 @@ const getAllTasksRecursive = async(taskIds)=>{
     const rtrn = await Promise.all(
         taskIds.map(
             async taskId=>{
-                return await getTaskRecursive(taskId.toString(), err=>{if(err){return {err:err}}});
+                return await getTaskRecursive(taskId.toString());
             }
         )
     )
@@ -334,7 +322,7 @@ const deleteAllTasksRecursive = async(taskIds)=>{
     const rtrn = await Promise.all(
         taskIds.map(
             async taskId=>{
-                return await deleteTaskRecursive(taskId.toString(), err=>{if(err){return {err:err}}});
+                return await deleteTaskRecursive(taskId.toString());
             }
         )
     )

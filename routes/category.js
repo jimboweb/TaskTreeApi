@@ -65,14 +65,15 @@ router.get('/:id', verifyToken, async (req,res)=>{
 });
 
 router.delete('/:id', verifyToken, async (req,res)=>{
-    if(!(await Branch.verifyOwnership(Branch.Category, req.params.id, req.userId))){
-        res.status(403).send({"err":"You are not authorized to delete that category"});
-    } else {
-        const deletedCategory = await Branch.deleteCategoryRecursive(req.params.id);
-        if (deletedCategory.err) {
-            res.status(500).send({"err": "error deleting category" + deletedCategory.err});
+    try {
+        if (!(await Branch.verifyOwnership(Branch.Category, req.params.id, req.userId))) {
+            res.status(403).send({"err": "You are not authorized to delete that category"});
+        } else {
+            const deletedCategory = await Branch.deleteCategoryRecursive(req.params.id);
+            res.status(200).send(deletedCategory);
         }
-        res.status(200).send(deletedCategory);
+    } catch (e) {
+        res.status(500).send({'err':`There was an error deleting the category: ${e.message}`})
     }
 });
 

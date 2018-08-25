@@ -82,4 +82,36 @@ router.delete('/:id', verifyToken, async (req,res)=>{
     }
 })
 
+/**
+ * Patch verb is currently only used to rebase an object. The body should contain the
+ * new parent type and new parentId. Per PATCH convention, changed values will be a single
+ * item in an array, as in:
+ * [{'parentType':'Category', 'parentId':[id value]}]
+ */
+router.patch('/:eventId', verifyToken, async(req,res)=>{
+    try{
+        const rebaseInstructionsArray = req.body;
+        if(rebaseInstructionsArray.type===Array && rebaseInstructionsArray.length===1){
+            const rebaseInstructions = rebaseInstructionsArray[0];
+            if(rebaseInstructions.parentType && rebaseInstructions.parentId){
+                const newParentType = Branch.getParentType(rebaseInstructions.parentType);
+                const newParentId = rebaseInstructions.parentId;
+                const eventToRebase = await Branch.getEvent(req.params.eventId);
+                const parentType = Branch.getParentType(eventToRebase.parentType);
+                const newParent = await Branch.getParent(newParentType,newParentId)
+                const rebasedChild = await Branch.rebaseChild(Branch.Event,parentType, eventToRebase,newParent,false);
+                res.status(200).send(rebasedChild);
+            } else {
+                res.status(500).send({'err':'Patch verb currently is only used in this API for rebasing to new parent. ' +
+                    'To modify an object, send the whole modified object using the PUT verb.'})
+            }
+        } else {
+            res.status(500).send({'err':'please send patch rebase instructions as an array with one item'})
+        }
+    }catch (e) {
+        res.status(500).send('error rebasing event' + e.message);
+    }
+})
+
+
 module.exports=router;

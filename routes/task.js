@@ -17,7 +17,7 @@ router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
     try {
         const parentType = Branch.getParentType(parentTypeString);
         const result = await Branch.getParentByType(parentType,parentId)
-        if (Permissions.checkObjectPermissions(result.accountId, req.userId)) {
+        if (await Branch.verifyOwnership(parentType, parentId, req.userId)) {
             const parent = result;
             const task = req.body;
             task.accountId = req.userId;
@@ -131,6 +131,37 @@ router.put('/:taskId', verifyToken, async (req,res)=>{
         res.status(200).send(updatedTask);
     }catch (e) {
         res.status(500).send('error updating category' + e.message);
+    }
+});
+
+/**
+ * Patch verb is currently only used to rebase an object. The body should contain the
+ * new parent type and new parentId. Per PATCH convention, changed values will be a single
+ * item in an array, as in:
+ * [{'parentType':'Category', 'parentId':[id value]}]
+ */
+router.patch('/:taskId', verifyToken, async(req,res)=>{
+    try{
+        const rebaseInstructionsArray = req.body;
+        if(rebaseInstructionsArray.type===Array && rebaseInstructionsArray.length===1){
+            const rebaseInstructions = rebaseInstructionsArray[0];
+            if(rebaseInstructions.parentType && rebaseInstructions.parentId){
+                const newParentType = Branch.getParentType(rebaseInstructions.parentType);
+                const newParentId = rebaseInstructions.parentId;
+                const taskToRebase = await Branch.getTask(req.params.taskId);
+                const parentType = Branch.getParentType(taskToRebase.parentType);
+                const newParent = await Branch.getParent(newParentType,newParentId)
+                const rebasedChild = await Branch.rebaseChild(Branch.Task,parentType, taskToRebase,newParent,false);
+                res.status(200).send(rebasedChild);
+            } else {
+                res.status(500).send({'err':'Patch verb currently is only used in this API for rebasing to new parent. ' +
+                    'To modify an object, send the whole modified object using the PUT verb.'})
+            }
+        } else {
+            res.status(500).send({'err':'please send patch rebase instructions as an array with one item'})
+        }
+    }catch (e) {
+        res.status(500).send('error rebasing task' + e.message);
     }
 })
 

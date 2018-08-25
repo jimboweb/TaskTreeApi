@@ -468,6 +468,7 @@ queries.deleteCategoryRecursive = deleteCategoryRecursive;
 queries.deleteTaskRecursive = deleteTaskRecursive;
 queries.deleteTaskAndRebaseChildren = deleteTaskAndRebaseChildren;
 queries.deleteCategoryAndRebaseChildren=deleteCategoryAndRebaseChildren;
+queries.rebaseChild = rebaseChild;
 queries.getParentType = getParentType;
 queries.createNote = createNote;
 queries.getNote = getNote;

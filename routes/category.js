@@ -33,7 +33,7 @@ router.post('/',verifyToken,userController.getUserByAccountId, async (req,res, n
  */
 router.get('/',verifyToken, async (req,res)=>{
     try {
-        const cats = Branch.getAllCategories(req.userId)
+        const cats = await Branch.getAllCategories(req.userId)
         res.status(200).send(cats);
     } catch (e) {
         res.status(500).send({'err':`There was a problem getting the category: ${err.message}`})

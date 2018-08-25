@@ -143,14 +143,15 @@ router.put('/:taskId', verifyToken, async (req,res)=>{
 router.patch('/:taskId', verifyToken, async(req,res)=>{
     try{
         const rebaseInstructionsArray = req.body;
-        if(rebaseInstructionsArray.type===Array && rebaseInstructionsArray.length===1){
+        if(rebaseInstructionsArray instanceof Array && rebaseInstructionsArray.length===1){
             const rebaseInstructions = rebaseInstructionsArray[0];
             if(rebaseInstructions.parentType && rebaseInstructions.parentId){
                 const newParentType = Branch.getParentType(rebaseInstructions.parentType);
                 const newParentId = rebaseInstructions.parentId;
                 const taskToRebase = await Branch.getTask(req.params.taskId);
                 const parentType = Branch.getParentType(taskToRebase.parentType);
-                const newParent = await Branch.getParent(newParentType,newParentId)
+                const newParent = await Branch.getParentByType(newParentType,newParentId)
+                //FIXME 180825: error rebasing taskError rebasing children:[object Object]
                 const rebasedChild = await Branch.rebaseChild(Branch.Task,parentType, taskToRebase,newParent,false);
                 res.status(200).send(rebasedChild);
             } else {
@@ -161,7 +162,7 @@ router.patch('/:taskId', verifyToken, async(req,res)=>{
             res.status(500).send({'err':'please send patch rebase instructions as an array with one item'})
         }
     }catch (e) {
-        res.status(500).send('error rebasing task' + e.message);
+        res.status(500).send({'err':'error rebasing task' + e.message});
     }
 })
 

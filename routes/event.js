@@ -98,7 +98,7 @@ router.patch('/:eventId', verifyToken, async(req,res)=>{
                 const newParentId = rebaseInstructions.parentId;
                 const eventToRebase = await Branch.getEvent(req.params.eventId);
                 const parentType = Branch.getParentType(eventToRebase.parentType);
-                const newParent = await Branch.getParent(newParentType,newParentId)
+                const newParent = await Branch.getParentByString(newParentType,newParentId)
                 const rebasedChild = await Branch.rebaseChild(Branch.Event,parentType, eventToRebase,newParent,false);
                 res.status(200).send(rebasedChild);
             } else {

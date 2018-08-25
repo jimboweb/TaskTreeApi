@@ -392,7 +392,7 @@ const rebaseChild = async (childType, parentType, child, parent, oldParentIsDele
         if(!oldParentIsDeleted){
             const oldParentType =  getParentType(child.parentType);
             const oldParentId = child.parentId;
-            const oldParent = getParentByString(oldParentType,oldParentId);
+            const oldParent = await getParentByString(oldParentType,oldParentId);
             const oldChildTypeList = childType === Task?oldParent.tasks:oldParent.events;
             const childOldIndex = oldChildTypeList.indexOf(child);
             oldChildTypeList.splice(childOldIndex);
@@ -458,7 +458,7 @@ queries.updateEvent = updateEvent;
 queries.getEvent = getEvent;
 queries.updateUser = updateUser;
 queries.getAllCategories = getAllCategories;
-queries.getParent = getParentByString;
+queries.getParentByString = getParentByString;
 queries.getParentByType = getParentByType;
 queries.updateParent = updateParent;
 queries.getCategoryRecursive = getCategoryRecursive;

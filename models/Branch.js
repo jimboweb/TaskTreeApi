@@ -230,9 +230,8 @@ const getParentByString=(parentType, parentId)=>{
 };
 
 const getParentByType=async (parentType, parentId)=>{
-    const getFunction = parentType.findOne;
     const query = {_id:parentId};
-    const rtrn = await getFunction.call(parentType, query);
+    const rtrn = await parentType.findOne(query);
     return rtrn;
 };
 
@@ -378,36 +377,53 @@ const deleteTaskAndRebaseChildren = async(id,newParentType,newParentId)=>{
 
 
 /**
- * assign a child to a new parent
+ * assign a child to a new newParent
  * @param childType: Task or Event
- * @param parentType Category or Task
+ * @param newParentType Category or Task
  * @param child child to rebase
- * @param parent the parent to rebase to
- * @param oldParentIsDeleted true if old parent has been deleted; if false child will be removed from old parent child index
+ * @param newParent the newParent to rebase to
+ * @param oldParentIsDeleted true if old newParent has been deleted; if false child will be removed from old newParent child index
  * @return {Promise<void>} updated child
  */
-const rebaseChild = async (childType, parentType, child, parent, oldParentIsDeleted) => {
-    child.parentId = parent._id;
+const rebaseChild = async (childType, newParentType, child, newParent, oldParentIsDeleted) => {
+    const oldParentId = child.parent.toString();
+    const oldParentTypeString = child.parentType;
+    child.parent = newParent._id;
+    child.parenType = newParentType;
     try{
         if(!oldParentIsDeleted){
-            const oldParentType =  getParentType(child.parentType);
-            const oldParentId = child.parentId;
-            const oldParent = await getParentByString(oldParentType,oldParentId);
-            const oldChildTypeList = childType === Task?oldParent.tasks:oldParent.events;
+            const oldParentType =  getParentType(oldParentTypeString);
+            const oldParent = await getParentByType(oldParentType,oldParentId);
+            const oldChildTypeList = getChildList(child,oldParent);
             const childOldIndex = oldChildTypeList.indexOf(child);
             oldChildTypeList.splice(childOldIndex);
             await oldParentType.findOneAndUpdate({_id:oldParent._id}, oldParent, {});
         }
         await childType.findOneAndUpdate({_id:child._id}, child, {});
-        const childTypeList = childType === Task?parent.tasks:parent.events;
-        childTypeList.push(child);
-        await parentType.findOneAndUpdate({id:parent._id}, parent, {});
+        const newChildTypeList = getChildList(child, newParent);
+        newChildTypeList.push(child);
+        //FIXME 180826: new parent isn't updating so child is orphaned
+        const modifiedNewParent = await newParentType.findOneAndUpdate({_id:newParent._id}, newParent);
         return child;
     } catch (err){
         throw new Error('Error rebasing children:' + err);
     }
 
 };
+
+const getChildList = (child, parent)=>{
+    let childTypeList;
+    if(child instanceof Task){
+        if(parent instanceof Category){
+            childTypeList = parent.tasks;
+        } else {
+            childTypeList = parent.subTasks;
+        }
+    } else {
+        childTypeList = parent.events;
+    }
+    return childTypeList;
+}
 
 const rebaseAllChildren = async (oldParent, newParentType, newParent, oldParentIsDeleted)=>{
     try{

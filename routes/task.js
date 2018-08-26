@@ -22,7 +22,7 @@ router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
             const task = req.body;
             task.accountId = req.userId;
             task.parent = parent._id;
-            task.parentTypeString = req.params.parentType;
+            task.parentType = parentTypeString;
             const tsk = await Branch.createTask(task)
             const taskList = parent.tasks ? parent.tasks : parent.subTasks;
             taskList.push(tsk._id);
@@ -151,7 +151,6 @@ router.patch('/:taskId', verifyToken, async(req,res)=>{
                 const taskToRebase = await Branch.getTask(req.params.taskId);
                 const parentType = Branch.getParentType(taskToRebase.parentType);
                 const newParent = await Branch.getParentByType(newParentType,newParentId)
-                //FIXME 180825: error rebasing taskError rebasing children:[object Object]
                 const rebasedChild = await Branch.rebaseChild(Branch.Task,parentType, taskToRebase,newParent,false);
                 res.status(200).send(rebasedChild);
             } else {

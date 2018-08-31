@@ -389,7 +389,8 @@ const rebaseChild = async (childType, newParentType, child, newParent, oldParent
     const oldParentId = child.parent.toString();
     const oldParentTypeString = child.parentType;
     child.parent = newParent._id;
-    child.parenType = newParentType;
+    //FIXME 180831: this needs to be turned into a string type; right now it's model type
+    child.parenType = newParentType===Category?'category':'task';
     try{
         if(!oldParentIsDeleted){
             const oldParentType =  getParentType(oldParentTypeString);
@@ -402,7 +403,6 @@ const rebaseChild = async (childType, newParentType, child, newParent, oldParent
         await childType.findOneAndUpdate({_id:child._id}, child, {});
         const newChildTypeList = getChildList(child, newParent);
         newChildTypeList.push(child);
-        //FIXME 180831: child's parentType is still coming out 'category' even when it should be 'task'
         const modifiedNewParent = await newParentType.findOneAndUpdate({_id:newParent._id}, newParent);
         return child;
     } catch (err){

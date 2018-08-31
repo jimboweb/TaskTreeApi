@@ -151,7 +151,7 @@ router.patch('/:taskId', verifyToken, async(req,res)=>{
                 const taskToRebase = await Branch.getTask(req.params.taskId);
                 const parentType = Branch.getParentType(taskToRebase.parentType);
                 const newParent = await Branch.getParentByType(newParentType,newParentId)
-                const rebasedChild = await Branch.rebaseChild(Branch.Task,parentType, taskToRebase,newParent,false);
+                const rebasedChild = await Branch.rebaseChild(Branch.Task,newParentType, taskToRebase,newParent,false);
                 res.status(200).send(rebasedChild);
             } else {
                 res.status(500).send({'err':'Patch verb currently is only used in this API for rebasing to new parent. ' +

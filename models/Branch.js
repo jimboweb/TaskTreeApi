@@ -390,7 +390,7 @@ const rebaseChild = async (childType, newParentType, child, newParent, oldParent
     const oldParentTypeString = child.parentType;
     child.parent = newParent._id;
     //FIXME 180831: this needs to be turned into a string type; right now it's model type
-    child.parenType = newParentType===Category?'category':'task';
+    child.parentType = newParentType===Category?'category':'task';
     try{
         if(!oldParentIsDeleted){
             const oldParentType =  getParentType(oldParentTypeString);

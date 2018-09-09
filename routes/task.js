@@ -95,18 +95,19 @@ router.delete('/:id', verifyToken, async (req,res)=>{
  * @return deleted task;
  */
 router.delete('/:id/:newParentType/:newParentId', verifyToken, async(req,res)=>{
-    const id = req.params.id;
+    const taskId = req.params.id;
+    const newParentTypeString = req.params.newParentType;
+    const newParentId = req.params.newParentId;
     try {
         if (await Branch.verifyOwnership(Branch.Task, taskId, req.userId)) {
-            const newParentType = Branch.getParentType(req.params.newParentType);
-            const newParentId = req.params.newParentId;
-            const deletedTask = await Branch.deleteTaskAndRebaseChildren(id, newParentType, newParentId);
+            const newParentType = Branch.getParentType(newParentTypeString);
+            const deletedTask = await Branch.deleteTaskAndRebaseChildren(taskId, newParentType, newParentId);
             res.status(200).send(deletedTask);
         } else {
             res.status(403).send({"err": "You are not authorized to delete that task"});
         }
     } catch (err) {
-        res.status(500).send('error deleting category' + err.message);
+        res.status(500).send('error deleting task ' + err.message);
     }
 });
 
@@ -121,14 +122,15 @@ router.put('/:taskId', verifyToken, async (req,res)=>{
     const taskId = req.params.taskId;
     const update = req.body;
     try {
-        if (!(await Branch.verifyOwnership(Branch.Task, taskId, req.userId))) {
+        if (await Branch.verifyOwnership(Branch.Task, taskId, req.userId)) {
+            const updatedTask = await Branch.updateTask(taskId, update);
+            if (updatedTask.err) {
+                res.status(500).send({"err": "error updating task" + updatedTask.err});
+            }
+            res.status(200).send(updatedTask);
+        } else {
             res.status(403).send({"err": "You are not authorized to modify that task"})
         }
-        const updatedTask = await Branch.updateTask(taskId, update);
-        if (updatedTask.err) {
-            res.status(500).send({"err": "error updating task" + updatedTask.err});
-        }
-        res.status(200).send(updatedTask);
     }catch (e) {
         res.status(500).send('error updating category' + e.message);
     }

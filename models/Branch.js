@@ -360,7 +360,7 @@ const deleteTaskRecursive = async taskId =>{
 const deleteTaskOrCategoryAndRebaseChildren = async (objType, objId, newParentType, newParentId) => {
     try {
         const deletedObj = await objType.findOneAndRemove({_id:objId});
-        const newParent = await getParentByString(newParentType, newParentId);
+        const newParent = await getParentByType(newParentType, newParentId);
         return await rebaseAllChildren(deletedObj, newParentType, newParent, true);
     } catch (err){
         throw new Error('Error deleting task:' + err);

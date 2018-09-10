@@ -376,6 +376,7 @@ const deleteTaskAndRebaseChildren = async(id,newParentType,newParentId)=>{
 }
 
 
+//TODO 180909: need a method called from this that checks to avoid circular parent-child references
 /**
  * assign a child to a new newParent
  * @param childType: Task or Event
@@ -386,11 +387,11 @@ const deleteTaskAndRebaseChildren = async(id,newParentType,newParentId)=>{
  * @return {Promise<void>} updated child
  */
 const rebaseChild = async (childType, newParentType, child, newParent, oldParentIsDeleted) => {
+    //FIXME: getting error 'cannot read property toString of undefined here I think
     const oldParentId = child.parent.toString();
     const oldParentTypeString = child.parentType;
     child.parent = newParent._id;
-    //FIXME 180831: this needs to be turned into a string type; right now it's model type
-    child.parentType = newParentType===Category?'category':'task';
+     child.parentType = newParent instanceof Category?'category':'task';
     try{
         if(!oldParentIsDeleted){
             const oldParentType =  getParentType(oldParentTypeString);
@@ -429,12 +430,18 @@ const rebaseAllChildren = async (oldParent, newParentType, newParent, oldParentI
     try{
         await Promise.all(
             oldParent.tasks.map(
-                task=>rebaseChild(Task,newParentType,task,newParent,oldParentIsDeleted)
+                async taskId=>{
+                    const task = await getTask(taskId);
+                    await rebaseChild(Task,newParentType,task,newParent,oldParentIsDeleted);
+                }
             )
         );
         await Promise.all(
             oldParent.events.map(
-                event=>rebaseChild(Event, newParentType,event,newParent,oldParentIsDeleted)
+                async eventId=>{
+                    const event = await getEvent(eventId);
+                    await rebaseChild(Event, newParentType,event,newParent,oldParentIsDeleted);
+                }
             )
         );
     } catch(err){

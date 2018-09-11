@@ -80,6 +80,7 @@ router.post('/register',
  * If login works, responds with a token
  */
 router.post('/login', (req,res,next)=>{passport.authenticate('local', (err, user) => {
+    console.log(`login request received. user = ${user.name}`)
     //TODO 180726 make error and unauthorized login redirects something better
     if (err) {
         res.status(503).send("There was an error");

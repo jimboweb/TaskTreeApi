@@ -87,7 +87,11 @@ router.post('/login', (req,res,next)=>{passport.authenticate('local', (err, user
     if (!user) {
         res.status(401).send("unauthorized login");
     }
-    const token = getToken(user);
+    try {
+        const token = getToken(user);
+    } catch (e){
+        res.status(500).send(`there was an error: ${e}`)
+    }
     res.status(200).send({auth: true, token: token});
 })(req, res, next);
 });

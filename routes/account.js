@@ -84,14 +84,17 @@ router.post('/login', (req,res,next)=>{passport.authenticate('local', (err, user
     //TODO 180726 make error and unauthorized login redirects something better
     if (err) {
         res.status(503).send("There was an error");
+        return;
     }
     if (!user) {
         res.status(401).send("unauthorized login");
+        return;
     }
     try {
         const token = getToken(user);
     } catch (e){
         res.status(500).send(`there was an error: ${e}`)
+        return;
     }
     res.status(200).send({auth: true, token: token});
 })(req, res, next);

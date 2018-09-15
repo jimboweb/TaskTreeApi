@@ -313,9 +313,10 @@ const deleteTaskOrCategoryRecursive = async (type, id)=>{
     );
     result.children.notes = await Promise.all(
         notes.map(async noteId=>{
-            const noteIdString = noteId.toString();
-            await Note.findOneAndRemove({_id:noteIdString});
-        }
+                const noteIdString = noteId.toString();
+                await Note.findOneAndRemove({_id:noteIdString});
+            }
+        )
     );
     return result;
 

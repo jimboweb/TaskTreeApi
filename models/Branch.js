@@ -294,17 +294,29 @@ const getTaskOrCategoryRecursive = async (type, id)=>{
 
 };
 
+
+//FIXME 180915: doesn't delete notes
 const deleteTaskOrCategoryRecursive = async (type, id)=>{
     const rslt = await type.findOneAndRemove.call(type, {_id:id});
     const result = rslt.toObject();
     const tasks = result.tasks?result.tasks:result.subTasks;
     const events = result.events;
+    const notes = result.notes;
     result.children = {};
     result.children.tasks = await deleteAllTasksRecursive(tasks);
-    result.children.events = events.map(async eventId=>{
-        const eventIdString = eventId.toString();
-        await Event.findOneAndRemove({_id:eventIdString});
-    });
+    result.children.events = await Promise.all(
+        events.map(async eventId=>{
+                const eventIdString = eventId.toString();
+                await Event.findOneAndRemove({_id:eventIdString});
+            }
+        )
+    );
+    result.children.notes = await Promise.all(
+        notes.map(async noteId=>
+            const noteIdString = noteId.toString();
+            await Note.findOneAndRemove({_id:noteIdString});
+        )
+    )
     return result;
 
 };

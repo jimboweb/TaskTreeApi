@@ -91,12 +91,11 @@ router.post('/login', (req,res,next)=>{passport.authenticate('local', (err, user
         return;
     }
     try {
-        const token = getToken(user);
+        const userToken = getToken(user);
+        res.status(200).send({auth: true, token: userToken});
     } catch (e){
         res.status(500).send(`there was an error: ${e.message}`)
-        return;
     }
-    res.status(200).send({auth: true, token: token});
 })(req, res, next);
 });
 

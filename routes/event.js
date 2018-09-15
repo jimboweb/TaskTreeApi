@@ -21,7 +21,7 @@ router.get(':/id', verifyToken, async (req,res)=>{
     }
 });
 
-//FIXME 180818: events don't have accountId or parentId
+
 /**
  * Creates event and adds to task or category
  * @param req.params.parentType: 'Task' or 'Category'

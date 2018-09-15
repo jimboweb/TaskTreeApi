@@ -40,6 +40,8 @@ router.get('/',verifyToken, async (req,res)=>{
     }
 });
 
+//FIXME 180915: categories are returned blank
+
 /**
  * Get category by id. Will return unauthorized if accountId
  * doesn't match userId of user associated with token

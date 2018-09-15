@@ -282,10 +282,13 @@ const getTaskOrCategoryRecursive = async (type, id)=>{
     const events = result.events;
     result.children = {};
     result.children.tasks = await getAllTasksRecursive(tasks);
-    result.children.events = events.map(async eventId=>{
-        const eventIdString = eventId.toString();
-        await Event.findOne({_id:eventIdString});
-    });
+    result.children.events = await Promise.all(
+            events.map(async eventId=>{
+                const eventIdString = eventId.toString();
+                await Event.findOne({_id:eventIdString});
+            }
+        )
+    );
     return result;
 
 

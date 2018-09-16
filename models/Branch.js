@@ -295,7 +295,6 @@ const getTaskOrCategoryRecursive = async (type, id)=>{
 };
 
 
-//FIXME 180915: doesn't delete notes
 const deleteTaskOrCategoryRecursive = async (type, id)=>{
     const rslt = await type.findOneAndRemove.call(type, {_id:id});
     const result = rslt.toObject();
@@ -307,7 +306,7 @@ const deleteTaskOrCategoryRecursive = async (type, id)=>{
     result.children.events = await Promise.all(
         events.map(async eventId=>{
                 const eventIdString = eventId.toString();
-                await Event.findOneAndRemove({_id:eventIdString});
+                return await Event.findOneAndRemove({_id:eventIdString});
             }
         )
     );
@@ -315,7 +314,7 @@ const deleteTaskOrCategoryRecursive = async (type, id)=>{
         result.children.notes = await Promise.all(
             notes.map(async noteId => {
                     const noteIdString = noteId.toString();
-                    await Note.findOneAndRemove({_id: noteIdString});
+                    return await Note.findOneAndRemove({_id: noteIdString});
                 }
             )
         );
@@ -344,6 +343,16 @@ const deleteAllTasksRecursive = async(taskIds)=>{
         )
     )
     return rtrn;
+};
+
+const applyAsyncToAll = async (func, ids)=>{
+    const rtrn = await Promise.all(
+        ids.map(
+            async id=>{
+                return await func(id.toString());
+            }
+        )
+    )
 };
 
 
@@ -405,7 +414,6 @@ const deleteTaskAndRebaseChildren = async(id,newParentType,newParentId)=>{
  * @return {Promise<void>} updated child
  */
 const rebaseChild = async (childType, newParentType, child, newParent, oldParentIsDeleted) => {
-    //FIXME: getting error 'cannot read property toString of undefined here I think
     const oldParentId = child.parent.toString();
     const oldParentTypeString = child.parentType;
     child.parent = newParent._id;

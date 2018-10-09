@@ -4,6 +4,7 @@ const verifyToken = require('../auth/verifyToken');
 const userController = require('./user');
 const Branch = require('../models/Branch');
 const Permissions = require('../auth/permissions');
+const httpUtils = require('../utility/httpUtil');
 
 /**
  * create note attached to event or task

@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const verifyToken = require('../auth/verifyToken');
 const Branch = require('../models/Branch')
+const httpUtils = require('../utility/httpUtil');
+
 // /* GET users listing. */
 // router.get('/', function(req, res, next) {
 //   res.send('respond with a resource');

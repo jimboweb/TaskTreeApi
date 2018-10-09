@@ -6,6 +6,7 @@ const config = require('../config');
 var jwt = require('jsonwebtoken');
 // var bcrypt = require('bcryptjs');
 const router = express.Router({mergeParams: true});
+const httpUtils = require('../utility/httpUtil');
 
 /**
  * Creates user account on registration
@@ -70,6 +71,7 @@ const getToken=(user)=>{
         });
 };
 
+//TODO 181009: upload and test this, then add it to all the other routes
 
 router.post('/register',
     registerAccount,
@@ -79,7 +81,7 @@ router.post('/register',
 /**
  * If login works, responds with a token
  */
-router.post('/login', (req,res,next)=>{passport.authenticate('local', (err, user) => {
+router.post('/login', httpUtils.addCrossOriginHeaders, (req,res,next)=>{passport.authenticate('local', (err, user) => {
     console.log(`login request received. user = ${req.body.username}`)
     //TODO 180726 make error and unauthorized login redirects something better
     if (err) {

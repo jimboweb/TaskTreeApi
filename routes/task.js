@@ -3,6 +3,7 @@ const router = express.Router();
 const verifyToken = require('../auth/verifyToken');
 const Branch = require('../models/Branch');
 const Permissions = require('../auth/permissions');
+const httpUtils = require('../utility/httpUtil');
 
 // language=JavaScript 1.8
 /**

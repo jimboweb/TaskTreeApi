@@ -4,6 +4,7 @@ const verifyToken = require('../auth/verifyToken');
 const userController = require('./user');
 const Branch = require('../models/Branch');
 const Permissions = require('../auth/permissions');
+const httpUtils = require('../utility/httpUtil');
 
 //TODO 180824: refactor the first three category routes using 'await' and add the verifyownership step
 

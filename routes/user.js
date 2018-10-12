@@ -19,7 +19,7 @@ const getUserByAccountId = (req,res,next) => {
 
 }
 
-router.get('/',verifyToken,getUserByAccountId,(req,res)=>{
+router.get('/',verifyToken,httpUtils.addCrossOriginHeaders, getUserByAccountId,(req,res)=>{
         res.status(200).send(req.userObj);
 });
 

@@ -10,7 +10,7 @@ const httpUtils = require('../utility/httpUtil');
  * @param req.params.id: id of event
  * @return the event
  */
-router.get(':/id', verifyToken, async (req,res)=>{
+router.get(':/id', verifyToken, httpUtils.addCrossOriginHeaders, async (req,res)=>{
     const eventId = req.params.id;
     if(!(await Branch.verifyOwnership(Branch.Event,eventId))){
         res.status(403).send({"err":"You are not authorized to get that event"});
@@ -29,7 +29,7 @@ router.get(':/id', verifyToken, async (req,res)=>{
  * @param req.params.parentId: id of parent
  * @return created event
  */
-router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
+router.post('/:parentType/:parentId', verifyToken, httpUtils.addCrossOriginHeaders, async (req,res)=>{
     const parentFunction = Branch.getParentType(req.params.parentType)
     const parentId = req.params.parentId;
     const newEvent = req.body;
@@ -60,7 +60,7 @@ router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
  * @param req.params.id: id of event to delete
  * @return deleted event
  */
-router.delete('/:id', verifyToken, async (req,res)=>{
+router.delete('/:id', verifyToken, httpUtils.addCrossOriginHeaders, async (req,res)=>{
     const eventId = req.params.id;
     if(!(await Branch.verifyOwnership(Branch.Event, eventId,req.userId))){
         res.status(403).send({'err':'You are not authorized to delete that event'});
@@ -89,7 +89,7 @@ router.delete('/:id', verifyToken, async (req,res)=>{
  * item in an array, as in:
  * [{'parentType':'Category', 'parentId':[id value]}]
  */
-router.patch('/:eventId', verifyToken, async(req,res)=>{
+router.patch('/:eventId', verifyToken, httpUtils.addCrossOriginHeaders, async(req,res)=>{
     try{
         const rebaseInstructionsArray = req.body;
         if(rebaseInstructionsArray.type===Array && rebaseInstructionsArray.length===1){

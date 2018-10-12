@@ -1,4 +1,4 @@
-const uiUrls = ['htto://localhost:8080'];
+const uiUrls = ['http://localhost:8080'];
 
 const addCrossOriginHeaders = (req,res,next) =>{
     uiUrls.forEach(uiUrl=>{

@@ -29,7 +29,7 @@ app.get("/", function(req, res) {
 // });
 
 
-app.post("/token", function(req, res) {
+app.post("/token", httpUtils.addCrossOriginHeaders, function(req, res) {
     if (req.body.email && req.body.password) {
         const email = req.body.email;
         const password = req.body.password;

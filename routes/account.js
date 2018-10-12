@@ -74,6 +74,7 @@ const getToken=(user)=>{
 //TODO 181009: upload and test this, then add it to all the other routes
 
 router.post('/register',
+    httpUtils.addCrossOriginHeaders,
     registerAccount,
     createUser);
 
@@ -108,7 +109,8 @@ router.post('/login', httpUtils.addCrossOriginHeaders, (req,res,next)=>{passport
  * so they are hard to abuse.
  */
 router.get('/logout', function(req, res) {
-    req.logout();
+    httpUtils.addCrossOriginHeaders,
+        req.logout();
     res.redirect('/login');
 });
 

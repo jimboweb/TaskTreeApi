@@ -3,7 +3,6 @@ const router = express.Router();
 const verifyToken = require('../auth/verifyToken');
 const Branch = require('../models/Branch');
 const Permissions = require('../auth/permissions');
-const httpUtils = require('../utility/httpUtil');
 
 // language=JavaScript 1.8
 /**
@@ -12,7 +11,7 @@ const httpUtils = require('../utility/httpUtil');
  * @param req.params.parentId: the id of the parent
  * @return added task
  */
-router.post('/:parentType/:parentId', verifyToken, httpUtils.addCrossOriginHeaders, async (req,res)=>{
+router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
     const parentId = req.params.parentId;
     const parentTypeString = req.params.parentType;
     try {
@@ -44,7 +43,7 @@ router.post('/:parentType/:parentId', verifyToken, httpUtils.addCrossOriginHeade
  * @param req.params.taskId: the id of task to get
  * @return task and all subtasks or error
  */
-router.get('/:taskId', verifyToken, httpUtils.addCrossOriginHeaders, async (req,res)=>{
+router.get('/:taskId', verifyToken, async (req,res)=>{
     const taskId = req.params.taskId;
     try {
         if (await Branch.verifyOwnership(Branch.Task, taskId, req.userId)) {
@@ -64,7 +63,7 @@ router.get('/:taskId', verifyToken, httpUtils.addCrossOriginHeaders, async (req,
  * @param req.params.id: id of task to delete
  * @return the deleted task or error
  */
-router.delete('/:id', verifyToken, httpUtils.addCrossOriginHeaders, async (req,res)=>{
+router.delete('/:id', verifyToken, async (req,res)=>{
     const taskId = req.params.id;
     try {
         if (await Branch.verifyOwnership(Branch.Task, taskId, req.userId)) {
@@ -95,7 +94,7 @@ router.delete('/:id', verifyToken, httpUtils.addCrossOriginHeaders, async (req,r
  * @param newParentId: id of new parent
  * @return deleted task;
  */
-router.delete('/:id/:newParentType/:newParentId', verifyToken, httpUtils.addCrossOriginHeaders, async(req,res)=>{
+router.delete('/:id/:newParentType/:newParentId', verifyToken, async(req,res)=>{
     const taskId = req.params.id;
     const newParentTypeString = req.params.newParentType;
     const newParentId = req.params.newParentId;
@@ -119,7 +118,7 @@ router.delete('/:id/:newParentType/:newParentId', verifyToken, httpUtils.addCros
  * @param req.body: the json of the updated category
  * @return the updated category
  */
-router.put('/:taskId', verifyToken, httpUtils.addCrossOriginHeaders, async (req,res)=>{
+router.put('/:taskId', verifyToken, async (req,res)=>{
     const taskId = req.params.taskId;
     const update = req.body;
     try {
@@ -143,7 +142,7 @@ router.put('/:taskId', verifyToken, httpUtils.addCrossOriginHeaders, async (req,
  * item in an array, as in:
  * [{'parentType':'Category', 'parentId':[id value]}]
  */
-router.patch('/:taskId', verifyToken, httpUtils.addCrossOriginHeaders, async(req,res)=>{
+router.patch('/:taskId', verifyToken, async(req,res)=>{
     try{
         const rebaseInstructionsArray = req.body;
         if(rebaseInstructionsArray instanceof Array && rebaseInstructionsArray.length===1){

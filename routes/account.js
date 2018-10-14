@@ -74,7 +74,6 @@ const getToken=(user)=>{
 //TODO 181009: upload and test this, then add it to all the other routes
 
 router.post('/register',
-    httpUtils.addCrossOriginHeaders,
     registerAccount,
     createUser);
 
@@ -82,7 +81,7 @@ router.post('/register',
 /**
  * If login works, responds with a token
  */
-router.post('/login', httpUtils.addCrossOriginHeaders, (req,res,next)=>{passport.authenticate('local', (err, user) => {
+router.post('/login',  (req,res,next)=>{passport.authenticate('local', (err, user) => {
     console.log(`login request received. user = ${req.body.username}`)
     //TODO 180726 make error and unauthorized login redirects something better
     if (err) {
@@ -109,7 +108,6 @@ router.post('/login', httpUtils.addCrossOriginHeaders, (req,res,next)=>{passport
  * so they are hard to abuse.
  */
 router.get('/logout', function(req, res) {
-    httpUtils.addCrossOriginHeaders,
         req.logout();
     res.redirect('/login');
 });

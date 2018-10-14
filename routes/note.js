@@ -13,7 +13,7 @@ const httpUtils = require('../utility/httpUtil');
  * @param body: the json of the note
  * @return the new note
  */
-router.post('/:parentType/:parentId', verifyToken, httpUtils.addCrossOriginHeaders, async (req,res)=>{
+router.post('/:parentType/:parentId', verifyToken,  async (req,res)=>{
     const parentFunction = Branch.getParentType(req.params.parentType)
     const parentId = req.params.parentId;
     const newNote = req.body;
@@ -43,7 +43,7 @@ router.post('/:parentType/:parentId', verifyToken, httpUtils.addCrossOriginHeade
  * @param id: the id of the note to get
  * @return the note
  */
-router.get('/:id', verifyToken, httpUtils.addCrossOriginHeaders, async (req,res)=>{
+router.get('/:id', verifyToken,  async (req,res)=>{
     const id = req.params.id;
     if(!(await Branch.verifyOwnership(Branch.Note,id))){
         res.status(403).send({'err':'you are not authorized to retrieve that note'});
@@ -57,7 +57,7 @@ router.get('/:id', verifyToken, httpUtils.addCrossOriginHeaders, async (req,res)
     }
 });
 
-router.delete('/:id', verifyToken, httpUtils.addCrossOriginHeaders, async (req, res)=>{
+router.delete('/:id', verifyToken,  async (req, res)=>{
     const id = req.params.id;
     if(!(await Branch.verifyOwnership(Branch.Note,id, req.userId))){
         res.status(403).send({'err':'you are not authorized to delete that note'});
@@ -81,7 +81,7 @@ router.delete('/:id', verifyToken, httpUtils.addCrossOriginHeaders, async (req, 
     }
 });
 
-router.put('/:id', verifyToken, httpUtils.addCrossOriginHeaders, async (req,res)=>{
+router.put('/:id', verifyToken,  async (req,res)=>{
     const id = req.params.id;
     const newNote = req.body;
     if(!(await Branch.verifyOwnership(Branch.Note,id))){

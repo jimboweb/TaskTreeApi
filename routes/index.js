@@ -7,11 +7,10 @@ const users = require("./user.js");
 const cfg = require("../config.js");
 const accountController = require('./account');
 const httpUtils = require('../utility/httpUtil');
-
-
-
+const cors = require('cors');
 const app = express();
-
+app.use(cors(httpUtils.corsOptions));
+app.options('*', cors());
 app.use(bodyParser.json());
 app.use(auth.initialize());
 app.use('/account',accountController);
@@ -29,7 +28,7 @@ app.get("/", function(req, res) {
 // });
 
 
-app.post("/token", httpUtils.addCrossOriginHeaders, function(req, res) {
+app.post("/token",  function(req, res) {
     if (req.body.email && req.body.password) {
         const email = req.body.email;
         const password = req.body.password;

@@ -37,7 +37,7 @@ router.get('/',
     verifyToken,
     async (req,res)=>{
     try {
-        const cats = await Branch.getAllCategories(req.userId)
+        const cats = await Branch.getAllCategoriesRecursive(req.userId)
         res.status(200).send(cats);
     } catch (e) {
         res.status(500).send({'err':`There was a problem getting the category: ${err.message}`})

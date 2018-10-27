@@ -323,6 +323,21 @@ const deleteTaskOrCategoryRecursive = async (type, id)=>{
 
 };
 
+const getAllCategoriesRecursive = async(accountId)=>{
+    const catIds = await getAllCategories(accountId).map(
+        cat=>{return cat._id}
+    )
+    const rtrn = await Promise.all(
+        catIds.map(
+            async catId=>{
+                return await getCategoryRecursive(catId.toString());
+            }
+        )
+    )
+    return rtrn;
+};
+
+
 const getAllTasksRecursive = async(taskIds)=>{
     const rtrn = await Promise.all(
         taskIds.map(
@@ -523,6 +538,7 @@ queries.createNote = createNote;
 queries.getNote = getNote;
 queries.deleteNote = deleteNote;
 queries.updateNote = updateNote;
+queries.getAllCategoriesRecursive = getAllCategoriesRecursive;
 queries.Task = Task;
 queries.Category = Category;
 queries.Event = Event;

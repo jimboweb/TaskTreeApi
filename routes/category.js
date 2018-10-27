@@ -39,7 +39,7 @@ router.get('/',
     try {
         const cats = await Branch.getAllCategoriesRecursive(req.userId)
         res.status(200).send(cats);
-    } catch (e) {
+    } catch (err) {
         res.status(500).send({'err':`There was a problem getting the category: ${err.message}`})
     }
 });

@@ -324,7 +324,8 @@ const deleteTaskOrCategoryRecursive = async (type, id)=>{
 };
 
 const getAllCategoriesRecursive = async(accountId)=>{
-    const catIds = await getAllCategories(accountId).map(
+    const cats =await getAllCategories(accountId);
+    const catIds = cats.map(
         cat=>{return cat._id}
     )
     const rtrn = await Promise.all(

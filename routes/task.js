@@ -39,11 +39,31 @@ router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
 });
 
 /**
- * Get task and subtasks recursively
+ * Get task with only its children's ids
  * @param req.params.taskId: the id of task to get
  * @return task and all subtasks or error
  */
 router.get('/:taskId', verifyToken, async (req,res)=>{
+    const taskId = req.params.taskId;
+    try {
+        if (await Branch.verifyOwnership(Branch.Task, taskId, req.userId)) {
+            const task = await Branch.getTask(taskId);
+            res.status(200).send(task);
+        } else {
+            res.status(403).send({"err": "You are not authorized to get that task"});
+        }
+    } catch(err){
+        res.status(500).send({'err': `error retrieving task: ${err.message}`});
+    }
+
+})
+
+/**
+ * Get task and subtasks recursively
+ * @param req.params.taskId: the id of task to get
+ * @return task and all subtasks or error
+ */
+router.get('/r/:taskId', verifyToken, async (req,res)=>{
     const taskId = req.params.taskId;
     try {
         if (await Branch.verifyOwnership(Branch.Task, taskId, req.userId)) {
@@ -57,6 +77,7 @@ router.get('/:taskId', verifyToken, async (req,res)=>{
     }
 
 })
+
 
 /**
  * Delete task and all subtasks recursively

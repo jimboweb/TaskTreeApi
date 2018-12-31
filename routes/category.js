@@ -44,7 +44,6 @@ router.get('/',
     }
 });
 
-//FIXME 180915: categories are returned blank
 
 /**
  * Get category by id. Will return unauthorized if accountId

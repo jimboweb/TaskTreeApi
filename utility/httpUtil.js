@@ -13,7 +13,7 @@ const addCrossOriginHeaders = (req,res,next) =>{
 const corsOptions = {
     origin: ['http://localhost:8080', 'https://reading-insomnia.herokuapp.com'],
     methods: ['GET','POST','PATCH','PUT','DELETE'],
-    allowedHeaders: ['x-access-token'],
+    allowedHeaders: ['x-access-token', 'Content-Type'],
     preFlightContinue: true
 }
 

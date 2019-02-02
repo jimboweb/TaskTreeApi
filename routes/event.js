@@ -5,7 +5,8 @@ const Branch = require('../models/Branch');
 const httpUtils = require('../utility/httpUtil');
 const cors = require('cors');
 
-//fixme 190201: get event not working
+//fixme 190201: fixed verifyOwnership,now returning null event
+//error: (node:18098) UnhandledPromiseRejectionWarning: Error: Can't set headers after they are sent.
 /**
  * get event by id
  * @param req.params.id: id of event
@@ -13,7 +14,7 @@ const cors = require('cors');
  */
 router.get('/:id', verifyToken,  async (req,res)=>{
     const eventId = req.params.id;
-    if(!(await Branch.verifyOwnership(Branch.Event,eventId))){
+    if(!(await Branch.verifyOwnership(Branch.Event,eventId, req.userId))){
         res.status(403).send({"err":"You are not authorized to get that event"});
     } else {
         const event = await Branch.getEvent(eventId, err => {

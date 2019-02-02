@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const Permissions = require('../auth/permissions');
 
-const standardOptions = {/*lean:true*/};
+const standardOptions = {};
 
 
 /**
@@ -157,6 +157,8 @@ const createTask  = (task,callback)=>{
 
 const updateTask = (id,obj,callback)=>{
     const idQuery = {_id:id};
+    //fixme 190202 DO FIRST: by default findOneAndUpdate returns the original document. need to add option returnNewDocument
+    //but I'm getting an error in the ui when I do this. why?
     return Task.findOneAndUpdate(idQuery,obj,standardOptions,callback);
 };
 

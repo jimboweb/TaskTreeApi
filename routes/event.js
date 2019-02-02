@@ -5,7 +5,7 @@ const Branch = require('../models/Branch');
 const httpUtils = require('../utility/httpUtil');
 const cors = require('cors');
 
-
+//fixme 190201: get event not working
 /**
  * get event by id
  * @param req.params.id: id of event

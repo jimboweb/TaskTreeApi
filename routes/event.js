@@ -11,7 +11,7 @@ const cors = require('cors');
  * @param req.params.id: id of event
  * @return the event
  */
-router.get(':/id', verifyToken,  async (req,res)=>{
+router.get('/:id', verifyToken,  async (req,res)=>{
     const eventId = req.params.id;
     if(!(await Branch.verifyOwnership(Branch.Event,eventId))){
         res.status(403).send({"err":"You are not authorized to get that event"});

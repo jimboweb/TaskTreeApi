@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 const Permissions = require('../auth/permissions');
 
 const standardOptions = {};
-
+const updateOptions = Object.assign({new:true},standardOptions);
 
 /**
  * accountId linked to Account object
@@ -34,7 +34,6 @@ const categorySchema = Schema({
 /**
  * external means that it's outside user's control
  * (for future versions with tasks shared between users I can create 'owner')
- * TODO: interface needs warning if startTime>deadline or startTime+estTime>deadline
  * completed - will depend on completion of subtaska and events except for leaves
  * parent will either be a category or task
  * prqTask must be completed before this one
@@ -93,7 +92,6 @@ const Task = mongoose.model('Task', taskSchema);
 const Event = mongoose.model('Event', eventSchema);
 const Note = mongoose.model('Note', noteSchema);
 
-//TODO someday: do the following with some kind of createObject thunk
 const createUser = (user,callback)=>{
     const uncat = {
         name: 'Uncategorized',
@@ -119,7 +117,7 @@ const getUser = (id,callback)=>{
 }
 const updateUser = (id,obj, callback)=>{
     const idQuery = {accountId:id};
-    return User.findOneAndUpdate(idQuery,obj, standardOptions,callback);
+    return User.findOneAndUpdate(idQuery,obj, updateOptions,callback);
 }
 const createCategory = (category,callback)=>{
     const newCategory = new Category(category);
@@ -133,7 +131,7 @@ const deleteCategory = (id,callback)=>{
 
 const updateCategory=(id,obj,callback)=>{
     const idQuery = {_id:id};
-    return Category.findOneAndUpdate(idQuery, obj,standardOptions,callback);
+    return Category.findOneAndUpdate(idQuery, obj,updateOptions,callback);
 };
 
 const getCategory = (id,callback) => {
@@ -157,9 +155,8 @@ const createTask  = (task,callback)=>{
 
 const updateTask = (id,obj,callback)=>{
     const idQuery = {_id:id};
-    //fixme 190202 DO FIRST: by default findOneAndUpdate returns the original document. need to add option returnNewDocument
-    //but I'm getting an error in the ui when I do this. why?
-    return Task.findOneAndUpdate(idQuery,obj,standardOptions,callback);
+    //fixme 190203: okay, now I'm sending the right option but it's still not working, why not?
+    return Task.findOneAndUpdate(idQuery,obj,updateOptions,callback);
 };
 
 const deleteTask = (id,callback)=>{
@@ -185,7 +182,7 @@ const deleteEvent = (id,callback)=>{
 
 const updateEvent = (id,obj,callback)=>{
     const idQuery = {_id:id};
-    return Event.findOneAndUpdate(idQuery,obj,standardOptions,callback);
+    return Event.findOneAndUpdate(idQuery,obj,updateOptions,callback);
 };
 
 const createNote = (note, callback)=>{
@@ -202,7 +199,7 @@ const deleteNote = (id, callback)=>{
 };
 
 const updateNote=(id, note, callback)=>{
-    return Note.findOneAndUpdate({_id:id},note, standardOptions, callback);
+    return Note.findOneAndUpdate({_id:id},note, updateOptions, callback);
 };
 
 

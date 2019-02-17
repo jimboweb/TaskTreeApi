@@ -155,7 +155,6 @@ const createTask  = (task,callback)=>{
 
 const updateTask = (id,obj,callback)=>{
     const idQuery = {_id:id};
-    //fixme 190203: okay, now I'm sending the right option but it's still not working, why not?
     return Task.findOneAndUpdate(idQuery,obj,updateOptions,callback);
 };
 

@@ -71,7 +71,6 @@ const getToken=(user)=>{
         });
 };
 
-//TODO 181009: upload and test this, then add it to all the other routes
 
 router.post('/register',
     registerAccount,

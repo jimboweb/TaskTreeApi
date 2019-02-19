@@ -71,7 +71,7 @@ router.delete('/:id', verifyToken,  async (req,res)=>{
     } else {
         try {
             const deletedEvent = await Branch.deleteEvent(eventId);
-            const parentId = deletedEvent.parentId;
+            const parentId = deletedEvent.parent.toString();
             const parentType = deletedEvent.parentType;
             const updatedParent = Branch.getParentByType(parentType, parentId);
             const eventIndex = updatedParent.events.indexOf(deletedEvent._id);

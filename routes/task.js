@@ -88,6 +88,7 @@ router.delete('/:id', verifyToken, async (req,res)=>{
     const taskId = req.params.id;
     try {
         if (await Branch.verifyOwnership(Branch.Task, taskId, req.userId)) {
+            //fixme 190219: task is deleted but not removed from parent.
             const deletedTask = await Branch.deleteTaskRecursive(taskId);
             const parentId = deletedTask.parentId;
             const parentType = deletedTask.parentType;

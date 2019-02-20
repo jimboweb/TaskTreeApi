@@ -90,9 +90,9 @@ router.delete('/:id', verifyToken, async (req,res)=>{
         if (await Branch.verifyOwnership(Branch.Task, taskId, req.userId)) {
             const deletedTask = await Branch.deleteTaskRecursive(taskId);
             const parentId = deletedTask.parent.toString();
-            const parentType = deletedTask.parentType;
-            //fixme 190219: getParentByType is returning promise:rejected
-            const updatedParent = Branch.getParentByType(parentType, parentId);
+            const parentType =  Branch.getParentType(deletedTask.parentType);
+
+            const updatedParent = await Branch.getParentByType(parentType, parentId);
             const eventIndex = updatedParent.tasks.indexOf(deletedTask._id);
             if (eventIndex === -1) {
                 throw new Error("task was not included in its parent");

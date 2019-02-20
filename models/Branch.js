@@ -495,6 +495,16 @@ const deleteCategoryRecursive = async catId =>{
 
 };
 
+//todo 190220: instead of sorting by score I need to return the score so I can sort at the end
+const searchByString = async (type, string)=>{
+    try{
+        return await type.find({$text:{$search:string}, score:{$meta:"textScore"}})
+            .sort({score:{$meta:"textScore"}});
+    } catch (e){
+        return `error in search: ${e}`;
+    }
+}
+
 
 /**
  * returns a promise
@@ -538,6 +548,7 @@ queries.getNote = getNote;
 queries.deleteNote = deleteNote;
 queries.updateNote = updateNote;
 queries.getAllCategoriesRecursive = getAllCategoriesRecursive;
+queries.searchByString =searchByString;
 queries.Task = Task;
 queries.Category = Category;
 queries.Event = Event;

@@ -497,7 +497,7 @@ const deleteCategoryRecursive = async catId =>{
 
 const searchByString = async (type, string)=>{
     try{
-        return await type.find({$text:{$search:string}, score:{$meta:"textScore"}})
+        return await type.find({$text:{$search:string}}, {score:{$meta:"textScore"}})
 
     } catch (e){
         return `error in search: ${e}`;

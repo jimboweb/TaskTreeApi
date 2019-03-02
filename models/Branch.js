@@ -144,6 +144,10 @@ const getAllCategories = (accountId,callback)=>{
     return Category.find(query, standardOptions, callback);
 };
 
+const getAllTasks = (accountId,callback)=>{
+    return Task.find({accountId:accountId}, standardOptions,callback);
+}
+
 const getTask = (id,callback)=>{
     const idQuery = {_id:id};
     return Task.findOne(idQuery,standardOptions,callback);
@@ -524,6 +528,7 @@ queries.createTask = createTask;
 queries.deleteTask = deleteTask;
 queries.updateTask = updateTask;
 queries.getTask = getTask;
+queries.getAllTasks = getAllTasks;
 queries.createEvent = createEvent;
 queries.deleteEvent = deleteEvent;
 queries.updateEvent = updateEvent;

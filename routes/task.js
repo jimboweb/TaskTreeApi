@@ -5,6 +5,9 @@ const Branch = require('../models/Branch');
 const Permissions = require('../auth/permissions');
 
 // language=JavaScript 1.8
+
+
+
 /**
  * Add task to a category or parent
  * @param parentType 'Task' or 'Category'
@@ -37,6 +40,15 @@ router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
     }
 
 });
+
+router.get('/',verifyToken, async (req,res)=>{
+    try {
+        const tasks = await Branch.getAllTasks(req.userId)
+        res.status(200).send(tasks);
+    } catch (err) {
+        res.status(500).send({'err':`There was a problem getting the tasks: ${err.message}`})
+    }})
+
 
 /**
  * Get task with only its children's ids
@@ -187,7 +199,9 @@ router.patch('/:taskId', verifyToken, async(req,res)=>{
     }catch (e) {
         res.status(500).send({'err':'error rebasing task' + e.message});
     }
-})
+});
+
+
 
 
 module.exports=router;

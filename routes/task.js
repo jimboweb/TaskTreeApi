@@ -121,6 +121,8 @@ router.delete('/:id', verifyToken, async (req,res)=>{
 
 });
 
+//fixme 190304: delete and rebase leaves stubs in parents and doesn't rebase. part of that may be from UI
+//see ui taskList.js line 32
 /**
  * delete task and rebase children to new parent
  * @param id: id of task to delete

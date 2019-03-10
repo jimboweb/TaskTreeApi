@@ -297,6 +297,8 @@ const getTaskOrCategoryRecursive = async (type, id)=>{
 };
 
 
+
+
 const deleteTaskOrCategoryRecursive = async (type, id)=>{
     const rslt = await type.findOneAndRemove.call(type, {_id:id});
     const result = rslt.toObject();
@@ -397,6 +399,7 @@ const deleteTaskRecursive = async taskId =>{
 
 /**
  * Delete task and reassign all its children to a new parent
+ * @param objType the type of object to delete
  * @param objId the task to delete
  * @param newParentType the type of the new parent
  * @param newParentId the id of the new parent
@@ -404,9 +407,8 @@ const deleteTaskRecursive = async taskId =>{
  */
 const deleteTaskOrCategoryAndRebaseChildren = async (objType, objId, newParentType, newParentId) => {
     try {
-        const deletedObj = await objType.findOneAndRemove({_id:objId});
+        const rslt = await objType.findOneAndRemove.call(objType, {_id:objId});
         const newParent = await getParentByType(newParentType, newParentId);
-        //fixme 190308: error in rebaseAllChildren: cannot read property .map() of undefined
         return await rebaseAllChildren(deletedObj, newParentType, newParent, true);
     } catch (err){
         throw new Error('Error deleting task:' + err);

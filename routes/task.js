@@ -138,6 +138,16 @@ router.delete('/:id/:newParentType/:newParentId', verifyToken, async(req,res)=>{
         if (await Branch.verifyOwnership(Branch.Task, taskId, req.userId)) {
             const newParentType = Branch.getParentType(newParentTypeString);
             const deletedTask = await Branch.deleteTaskAndRebaseChildren(taskId, newParentType, newParentId);
+            const parentId = deletedTask.parent.toString();
+            const parentType =  Branch.getParentType(deletedTask.parentType);
+
+            const updatedParent = await Branch.getParentByType(parentType, parentId);
+            const eventIndex = updatedParent.tasks.indexOf(deletedTask._id);
+            if (eventIndex === -1) {
+                throw new Error("task was not included in its parent");
+            }
+            updatedParent.tasks.splice(eventIndex);
+            await Branch.updateParent(parentType, parentId, updatedParent);
             res.status(200).send(deletedTask);
         } else {
             res.status(403).send({"err": "You are not authorized to delete that task"});

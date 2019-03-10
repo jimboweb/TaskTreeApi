@@ -406,6 +406,7 @@ const deleteTaskOrCategoryAndRebaseChildren = async (objType, objId, newParentTy
     try {
         const deletedObj = await objType.findOneAndRemove({_id:objId});
         const newParent = await getParentByType(newParentType, newParentId);
+        //fixme 190308: error in rebaseAllChildren: cannot read property .map() of undefined
         return await rebaseAllChildren(deletedObj, newParentType, newParent, true);
     } catch (err){
         throw new Error('Error deleting task:' + err);
@@ -472,8 +473,9 @@ const getChildList = (child, parent)=>{
 
 const rebaseAllChildren = async (oldParent, newParentType, newParent, oldParentIsDeleted)=>{
     try{
+        const taskList = oldParent.subTasks?oldParent.subTasks:oldParent.tasks;
         await Promise.all(
-            oldParent.tasks.map(
+            taskList.map(
                 async taskId=>{
                     const task = await getTask(taskId);
                     await rebaseChild(Task,newParentType,task,newParent,oldParentIsDeleted);

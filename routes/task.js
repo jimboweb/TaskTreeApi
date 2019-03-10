@@ -137,6 +137,7 @@ router.delete('/:id/:newParentType/:newParentId', verifyToken, async(req,res)=>{
     try {
         if (await Branch.verifyOwnership(Branch.Task, taskId, req.userId)) {
             const newParentType = Branch.getParentType(newParentTypeString);
+            //fixme 190310: this returns the category, not the deleted task. probably not what we want.
             const deletedTask = await Branch.deleteTaskAndRebaseChildren(taskId, newParentType, newParentId);
             const parentId = deletedTask.parent.toString();
             const parentType =  Branch.getParentType(deletedTask.parentType);

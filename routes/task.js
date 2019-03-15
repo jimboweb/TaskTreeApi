@@ -26,6 +26,8 @@ router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
             task.accountId = req.userId;
             task.parent = parent._id;
             task.parentType = parentTypeString;
+            task.completed = false;
+            //fixme 190315: task validation failed, so the task isn't in the right form
             const tsk = await Branch.createTask(task)
             const taskList = parent.tasks ? parent.tasks : parent.subTasks;
             taskList.push(tsk._id);

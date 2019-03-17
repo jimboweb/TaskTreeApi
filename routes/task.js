@@ -106,7 +106,8 @@ router.delete('/:id', verifyToken, async (req,res)=>{
             const parentType =  Branch.getParentType(deletedTask.parentType);
 
             const originalParent = await Branch.getParentByType(parentType, parentId);
-            const updatedTasks = originalParent.tasks.filter(id=>id.toString()!=deletedTask._id.toString());
+            //todo 190316: need to change event and note to delete from parent this way
+            const updatedTasks = originalParent.tasks.filter(id=>id.toString()!==deletedTask._id.toString());
             const updatedParent = Object.assign(originalParent, {tasks:updatedTasks});
             await Branch.updateParent(parentType, parentId, updatedParent);
             res.status(200).send(deletedTask);
@@ -139,12 +140,9 @@ router.delete('/:id/:newParentType/:newParentId', verifyToken, async(req,res)=>{
             const parentId = deletedTask.parent.toString();
             const parentType =  Branch.getParentType(deletedTask.parentType);
 
-            const updatedParent = await Branch.getParentByType(parentType, parentId);
-            const eventIndex = updatedParent.tasks.indexOf(deletedTask._id);
-            if (eventIndex === -1) {
-                throw new Error("task was not included in its parent");
-            }
-            updatedParent.tasks.splice(eventIndex);
+            const originalParent = await Branch.getParentByType(parentType, parentId);
+            const updatedTasks = originalParent.tasks.filter(id=>id.toString()!==deletedTask._id.toString());
+            const updatedParent = Object.assign(originalParent, {tasks:updatedTasks});
             await Branch.updateParent(parentType, parentId, updatedParent);
             res.status(200).send(deletedTask);
         } else {

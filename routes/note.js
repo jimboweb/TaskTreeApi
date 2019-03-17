@@ -66,13 +66,9 @@ router.delete('/:id', verifyToken,  async (req, res)=>{
             const deletedNote = await Branch.deleteNote(id);
             const parentId = deletedNote.parent.toString();
             const parentType = Branch.getParentType(deletedNote.parentType);
-            const updatedParent = await Branch.getParentByType(parentType, parentId);
-            const parentNotes = updatedParent.notes;
-            const eventIndex = parentNotes.indexOf(deletedNote._id);
-            if (eventIndex === -1) {
-                res.status(500).send({"err":"task was not included in its parent"});
-            }
-            parentNotes.splice(eventIndex);
+            const originalParent = await Branch.getParentByType(parentType, parentId);
+            const updatedNotes = originalParent.notes.filter(id=>id.toString()!==deletedNote._id.toString());
+            const updatedParent = Object.assign(originalParent, {tasks:updatedNotes});
             await Branch.updateParent(parentType, parentId, updatedParent);
             res.status(200).send(deletedNote);
         } catch (err) {

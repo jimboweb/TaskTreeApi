@@ -73,12 +73,9 @@ router.delete('/:id', verifyToken,  async (req,res)=>{
             const deletedEvent = await Branch.deleteEvent(eventId);
             const parentId = deletedEvent.parent.toString();
             const parentType = Branch.getParentType(deletedEvent.parentType);
-            const updatedParent = await Branch.getParentByType(parentType, parentId);
-            const eventIndex = updatedParent.events.indexOf(deletedEvent._id);
-            if (eventIndex === -1) {
-                throw new Error("event was not included in its parent");
-            }
-            updatedParent.events.splice(eventIndex);
+            const originalParent = await Branch.getParentByType(parentType, parentId);
+            const updatedEvents = originalParent.events.filter(id=>id.toString()!==deletedEvent._id.toString());
+            const updatedParent = Object.assign(originalParent, {tasks:updatedEvents});
             await Branch.updateParent(parentType, parentId, updatedParent);
             res.status(200).send(deletedEvent);
         } catch (err) {

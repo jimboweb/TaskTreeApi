@@ -27,7 +27,6 @@ router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
             task.parent = parent._id;
             task.parentType = parentTypeString;
             task.completed = false;
-            //fixme 190315: task validation failed, so the task isn't in the right form
             const tsk = await Branch.createTask(task)
             const taskList = parent.tasks ? parent.tasks : parent.subTasks;
             taskList.push(tsk._id);
@@ -106,12 +105,9 @@ router.delete('/:id', verifyToken, async (req,res)=>{
             const parentId = deletedTask.parent.toString();
             const parentType =  Branch.getParentType(deletedTask.parentType);
 
-            const updatedParent = await Branch.getParentByType(parentType, parentId);
-            const eventIndex = updatedParent.tasks.indexOf(deletedTask._id);
-            if (eventIndex === -1) {
-                throw new Error("task was not included in its parent");
-            }
-            updatedParent.tasks.splice(eventIndex);
+            const originalParent = await Branch.getParentByType(parentType, parentId);
+            const updatedTasks = originalParent.tasks.filter(id=>id.toString()!=deletedTask._id.toString());
+            const updatedParent = Object.assign(originalParent, {tasks:updatedTasks});
             await Branch.updateParent(parentType, parentId, updatedParent);
             res.status(200).send(deletedTask);
         } else {
@@ -139,7 +135,6 @@ router.delete('/:id/:newParentType/:newParentId', verifyToken, async(req,res)=>{
     try {
         if (await Branch.verifyOwnership(Branch.Task, taskId, req.userId)) {
             const newParentType = Branch.getParentType(newParentTypeString);
-            //fixme 190310: this returns the category, not the deleted task. probably not what we want.
             const deletedTask = await Branch.deleteTaskAndRebaseChildren(taskId, newParentType, newParentId);
             const parentId = deletedTask.parent.toString();
             const parentType =  Branch.getParentType(deletedTask.parentType);

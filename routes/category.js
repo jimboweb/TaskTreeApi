@@ -6,7 +6,6 @@ const Branch = require('../models/Branch');
 const Permissions = require('../auth/permissions');
 const httpUtils = require('../utility/httpUtil');
 
-//TODO 180824: refactor the first three category routes using 'await' and add the verifyownership step
 
 /**
  * body of request should be category as json object

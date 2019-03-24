@@ -107,8 +107,10 @@ router.delete('/:id', verifyToken, async (req,res)=>{
 
             const originalParent = await Branch.getParentByType(parentType, parentId);
             //todo 190316: need to change event and note to delete from parent this way
-            const updatedTasks = originalParent.tasks.filter(id=>id.toString()!==deletedTask._id.toString());
-            const updatedParent = Object.assign(originalParent, {tasks:updatedTasks});
+            const taskList = deletedTask.parentType==='category'?originalParent.tasks:originalParent.subTasks;
+            const updatedTasks = taskList.filter(id=>id.toString()!==deletedTask._id.toString());
+            const updatedTaskObject = deletedTask.parentType==='category'?{tasks:updatedTasks}:{subTasks:updatedTasks}
+            const updatedParent = Object.assign(originalParent, updatedTaskObject);
             await Branch.updateParent(parentType, parentId, updatedParent);
             res.status(200).send(deletedTask);
         } else {

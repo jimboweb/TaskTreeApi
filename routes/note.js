@@ -69,7 +69,7 @@ router.delete('/:id', verifyToken,  async (req, res)=>{
             const parentType = Branch.getParentType(deletedNote.parentType);
             const originalParent = await Branch.getParentByType(parentType, parentId);
             const updatedNotes = originalParent.notes.filter(id=>id.toString()!==deletedNote._id.toString());
-            const updatedParent = Object.assign(originalParent, {tasks:updatedNotes});
+            const updatedParent = Object.assign(originalParent, {notes:updatedNotes});
             await Branch.updateParent(parentType, parentId, updatedParent);
             res.status(200).send(deletedNote);
         } catch (err) {

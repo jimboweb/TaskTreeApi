@@ -28,6 +28,7 @@ router.post('/:parentType/:parentId', verifyToken,  async (req,res)=>{
             newNote.accountId = req.userId;
             newNote.parent = parent._id;
             newNote.parentType = req.params.parentType;
+            newNote.dateStamp = new Date();
             const note = await Branch.createNote(newNote);
             parent.notes.push(note._id);
             await Branch.updateParent(parentFunction, parentId, parent);
@@ -45,7 +46,7 @@ router.post('/:parentType/:parentId', verifyToken,  async (req,res)=>{
  */
 router.get('/:id', verifyToken,  async (req,res)=>{
     const id = req.params.id;
-    if(!(await Branch.verifyOwnership(Branch.Note,id))){
+    if(!(await Branch.verifyOwnership(Branch.Note,id, req.userId))){
         res.status(403).send({'err':'you are not authorized to retrieve that note'});
     } else {
         try {

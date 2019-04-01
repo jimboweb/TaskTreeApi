@@ -71,6 +71,7 @@ router.delete('/:id', verifyToken,  async (req, res)=>{
             const updatedNotes = originalParent.notes.filter(id=>id.toString()!==deletedNote._id.toString());
             const updatedParent = Object.assign(originalParent, {notes:updatedNotes});
             await Branch.updateParent(parentType, parentId, updatedParent);
+            //fixme 190401: crashes on sending deleted note
             res.status(200).send(deletedNote);
         } catch (err) {
             res.status(500).send({'err':'there was an error deleting that note: ' + err.message})

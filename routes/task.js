@@ -60,6 +60,7 @@ router.get('/:taskId', verifyToken, async (req,res)=>{
     const taskId = req.params.taskId;
     try {
         if (await Branch.verifyOwnership(Branch.Task, taskId, req.userId)) {
+            //fixme 190403: it's crashing right here, but only after I delete a note
             const task = await Branch.getTask(taskId);
             res.status(200).send(task);
         } else {
@@ -100,21 +101,21 @@ router.get('/r/:taskId', verifyToken, async (req,res)=>{
 router.delete('/:id', verifyToken, async (req,res)=>{
     const taskId = req.params.id;
     try {
-        if (await Branch.verifyOwnership(Branch.Task, taskId, req.userId)) {
+        if (!await Branch.verifyOwnership(Branch.Task, taskId, req.userId)) {
+            res.status(403).send({"err": "You are not authorized to delete that task"});
+        } else {
             const deletedTask = await Branch.deleteTaskRecursive(taskId);
             const parentId = deletedTask.parent.toString();
-            const parentType =  Branch.getParentType(deletedTask.parentType);
+            const parentType = Branch.getParentType(deletedTask.parentType);
 
             const originalParent = await Branch.getParentByType(parentType, parentId);
             //todo 190316: need to change event and note to delete from parent this way
-            const taskList = deletedTask.parentType==='category'?originalParent.tasks:originalParent.subTasks;
-            const updatedTasks = taskList.filter(id=>id.toString()!==deletedTask._id.toString());
-            const updatedTaskObject = deletedTask.parentType==='category'?{tasks:updatedTasks}:{subTasks:updatedTasks}
+            const taskList = deletedTask.parentType === 'category' ? originalParent.tasks : originalParent.subTasks;
+            const updatedTasks = taskList.filter(id => id.toString() !== deletedTask._id.toString());
+            const updatedTaskObject = deletedTask.parentType === 'category' ? {tasks: updatedTasks} : {subTasks: updatedTasks}
             const updatedParent = Object.assign(originalParent, updatedTaskObject);
             await Branch.updateParent(parentType, parentId, updatedParent);
             res.status(200).send(deletedTask);
-        } else {
-            res.status(403).send({"err": "You are not authorized to delete that task"});
         }
     } catch (err) {
         res.status(500).send({'err': `error deleting task: ${err.message}`});

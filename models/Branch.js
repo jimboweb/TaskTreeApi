@@ -5,6 +5,8 @@ const Permissions = require('../auth/permissions');
 const standardOptions = {};
 const updateOptions = Object.assign({new:true},standardOptions);
 
+//TODO 190404: change all the findOnes to findById
+
 /**
  * accountId linked to Account object
  * userName same as in Account object (unnecessary?)
@@ -125,8 +127,7 @@ const createCategory = (category,callback)=>{
 };
 
 const deleteCategory = (id,callback)=>{
-    const idQuery = {_id:id};
-    return Category.findOneAndRemove(idQuery,callback);
+    return Category.findByIdAndDelete(idQuery,callback);
 };
 
 const updateCategory=(id,obj,callback)=>{
@@ -149,8 +150,7 @@ const getAllTasks = (accountId,callback)=>{
 }
 
 const getTask = (id,callback)=>{
-    const idQuery = {_id:id};
-    return Task.findOne(idQuery,standardOptions,callback);
+    return Task.findById(id, callback);
 };
 
 const createTask  = (task,callback)=>{

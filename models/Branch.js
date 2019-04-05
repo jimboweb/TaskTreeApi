@@ -127,17 +127,15 @@ const createCategory = (category,callback)=>{
 };
 
 const deleteCategory = (id,callback)=>{
-    return Category.findByIdAndDelete(idQuery,callback);
+    return Category.findByIdAndDelete(id,callback);
 };
 
 const updateCategory=(id,obj,callback)=>{
-    const idQuery = {_id:id};
-    return Category.findOneAndUpdate(idQuery, obj,updateOptions,callback);
+    return Category.findByIdAndUpdate(id, obj,updateOptions,callback);
 };
 
 const getCategory = (id,callback) => {
-    const idQuery = {_id:id};
-    return Category.findOne(idQuery, standardOptions,callback);
+    return Category.findById(id, standardOptions,callback);
 };
 
 const getAllCategories = (accountId,callback)=>{
@@ -158,18 +156,15 @@ const createTask  = (task,callback)=>{
 };
 
 const updateTask = (id,obj,callback)=>{
-    const idQuery = {_id:id};
-    return Task.findOneAndUpdate(idQuery,obj,updateOptions,callback);
+    return Task.findByIdAndUpdate(id,obj,updateOptions,callback);
 };
 
 const deleteTask = (id,callback)=>{
-    const idQuery = {_id:id};
-    return Task.findOneAndRemove(idQuery,callback);
+    return Task.findByIdAndRemove(id,callback);
 };
 
 const getEvent=(id,callback)=>{
-    const idQuery = {_id:id};
-    return Event.findOne(idQuery,standardOptions,callback)
+    return Event.findById(id,standardOptions,callback)
 };
 
 const createEvent = (event,callback)=>{
@@ -179,13 +174,11 @@ const createEvent = (event,callback)=>{
 };
 
 const deleteEvent = (id,callback)=>{
-    const idQuery = {_id:id};
-    return Event.findOneAndRemove(idQuery, standardOptions, callback);
+    return Event.findByIdAndRemove(id, standardOptions, callback);
 };
 
 const updateEvent = (id,obj,callback)=>{
-    const idQuery = {_id:id};
-    return Event.findOneAndUpdate(idQuery,obj,updateOptions,callback);
+    return Event.findByIdAndUpdate(id,obj,updateOptions,callback);
 };
 
 const createNote = (note, callback)=>{
@@ -194,15 +187,15 @@ const createNote = (note, callback)=>{
 };
 
 const getNote =(id,callback)=>{
-    return Note.findOne({_id:id}, standardOptions, callback);
+    return Note.findById(id, standardOptions, callback);
 };
 
 const deleteNote = (id, callback)=>{
-    return Note.findOneAndRemove({_id:id}, standardOptions, callback);
+    return Note.findByIdAndRemove(id, standardOptions, callback);
 };
 
 const updateNote=(id, note, callback)=>{
-    return Note.findOneAndUpdate({_id:id},note, updateOptions, callback);
+    return Note.findByIdAndUpdate(id,note, updateOptions, callback);
 };
 
 
@@ -232,8 +225,7 @@ const getParentByString=(parentType, parentId)=>{
 };
 
 const getParentByType=async (parentType, parentId)=>{
-    const query = {_id:parentId};
-    const rtrn = await parentType.findOne(query);
+    const rtrn = await parentType.findById(parentId);
     return rtrn;
 };
 
@@ -262,7 +254,7 @@ const updateParent = (parentType, parentId, parent)=>{
         if(!parentFunction){
             reject({'err':`${parentType} is not a valid parent type`});
         }
-        parentFunction.call(this,{_id:parentId},parent,(err,prnt)=>{
+        parentFunction.call(this,parentId,parent,(err,prnt)=>{
             if(err){
                 reject({error:'unable to add new task to parent'});
             }
@@ -273,7 +265,7 @@ const updateParent = (parentType, parentId, parent)=>{
 
 
 const getTaskOrCategoryRecursive = async (type, id)=>{
-    const rslt = await type.findOne.call(type, {_id:id},{}, standardOptions, err=>{
+    const rslt = await type.findById.call(type, id,{}, standardOptions, err=>{
         if(err){
             return({err: err});
         }
@@ -287,7 +279,7 @@ const getTaskOrCategoryRecursive = async (type, id)=>{
     result.children.events = await Promise.all(
             events.map(async eventId=>{
                 const eventIdString = eventId.toString();
-                return await Event.findOne({_id:eventIdString});
+                return await Event.findById(eventIdString);
             }
         )
     );
@@ -300,7 +292,7 @@ const getTaskOrCategoryRecursive = async (type, id)=>{
 
 
 const deleteTaskOrCategoryRecursive = async (type, id)=>{
-    const rslt = await type.findOneAndRemove.call(type, {_id:id});
+    const rslt = await type.findByIdAndRemove.call(type, id);
     const result = rslt.toObject();
     const tasks = result.tasks?result.tasks:result.subTasks;
     const events = result.events;
@@ -310,7 +302,7 @@ const deleteTaskOrCategoryRecursive = async (type, id)=>{
     result.children.events = await Promise.all(
         events.map(async eventId=>{
                 const eventIdString = eventId.toString();
-                return await Event.findOneAndRemove({_id:eventIdString});
+                return await Event.findByIdAndRemove(eventIdString);
             }
         )
     );
@@ -318,7 +310,7 @@ const deleteTaskOrCategoryRecursive = async (type, id)=>{
         result.children.notes = await Promise.all(
             notes.map(async noteId => {
                     const noteIdString = noteId.toString();
-                    return await Note.findOneAndRemove({_id: noteIdString});
+                    return await Note.findByIdAndRemove(noteIdString);
                 }
             )
         );
@@ -407,7 +399,7 @@ const deleteTaskRecursive = async taskId =>{
  */
 const deleteTaskOrCategoryAndRebaseChildren = async (objType, objId, newParentType, newParentId) => {
     try {
-        const deletedObj = await objType.findOneAndRemove.call(objType, {_id:objId});
+        const deletedObj = await objType.findByIdAndRemove.call(objType, objId);
         const newParent = await getParentByType(newParentType, newParentId);
         await rebaseAllChildren(deletedObj, newParentType, newParent, true);
         return deletedObj;
@@ -447,12 +439,12 @@ const rebaseChild = async (childType, newParentType, child, newParent, oldParent
             const oldChildTypeList = getChildList(child,oldParent);
             const childOldIndex = oldChildTypeList.indexOf(child);
             oldChildTypeList.splice(childOldIndex);
-            await oldParentType.findOneAndUpdate({_id:oldParent._id}, oldParent, {});
+            await oldParentType.findByIdAndUpdate(oldParent._id, oldParent, {});
         }
-        await childType.findOneAndUpdate({_id:child._id}, child, {});
+        await childType.findByIdAndUpdate(child._id, child, {});
         const newChildTypeList = getChildList(child, newParent);
         newChildTypeList.push(child);
-        const modifiedNewParent = await newParentType.findOneAndUpdate({_id:newParent._id}, newParent);
+        const modifiedNewParent = await newParentType.findByIdAndUpdate(newParent._id, newParent);
         return child;
     } catch (err){
         throw new Error('Error rebasing children:' + err);

@@ -6,7 +6,6 @@ const Branch = require('../models/Branch');
 const Permissions = require('../auth/permissions');
 const httpUtils = require('../utility/httpUtil');
 
-//TODO 180824: refactor the first three category routes using 'await' and add the verifyownership step
 
 /**
  * body of request should be category as json object
@@ -27,12 +26,26 @@ router.post('/',verifyToken,userController.getUserByAccountId,  async (req,res, 
 
 });
 
+/**
+ * Get all categories for user associated with token
+ */
+router.get('/',
+
+    verifyToken,
+    async (req,res)=>{
+        try {
+            const cats = await Branch.getAllCategories(req.userId)
+            res.status(200).send(cats);
+        } catch (err) {
+            res.status(500).send({'err':`There was a problem getting the category: ${err.message}`})
+        }
+    });
 
 
 /**
  * Get all categories for user associated with token
  */
-router.get('/',
+router.get('/r',
     
     verifyToken,
     async (req,res)=>{
@@ -44,13 +57,29 @@ router.get('/',
     }
 });
 
-//FIXME 180915: categories are returned blank
-
 /**
  * Get category by id. Will return unauthorized if accountId
  * doesn't match userId of user associated with token
  */
 router.get('/:id', verifyToken,  async (req,res)=>{
+    try {
+        if ((await Branch.verifyOwnership(Branch.Category, req.params.id, req.userId))) {
+            const cat = await Branch.getCategory(req.params.id);
+            res.status(200).send(cat);
+        } else {
+            res.status(403).send({"err": "You are not authorized to get that category"});
+        }
+    } catch (e) {
+        res.status(500).send({'err':`There was a problem retrieving that category: ${e.message}`})
+    }
+});
+
+
+/**
+ * Get category by id. Will return unauthorized if accountId
+ * doesn't match userId of user associated with token
+ */
+router.get('/r/:id', verifyToken,  async (req,res)=>{
     try {
         if ((await Branch.verifyOwnership(Branch.Category, req.params.id, req.userId))) {
             const cat = await Branch.getCategoryRecursive(req.params.id);

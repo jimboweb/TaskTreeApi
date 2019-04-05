@@ -2,8 +2,10 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const Permissions = require('../auth/permissions');
 
-const standardOptions = {/*lean:true*/};
+const standardOptions = {};
+const updateOptions = Object.assign({new:true},standardOptions);
 
+//TODO 190404: change all the findOnes to findById
 
 /**
  * accountId linked to Account object
@@ -34,7 +36,6 @@ const categorySchema = Schema({
 /**
  * external means that it's outside user's control
  * (for future versions with tasks shared between users I can create 'owner')
- * TODO: interface needs warning if startTime>deadline or startTime+estTime>deadline
  * completed - will depend on completion of subtaska and events except for leaves
  * parent will either be a category or task
  * prqTask must be completed before this one
@@ -93,7 +94,6 @@ const Task = mongoose.model('Task', taskSchema);
 const Event = mongoose.model('Event', eventSchema);
 const Note = mongoose.model('Note', noteSchema);
 
-//TODO someday: do the following with some kind of createObject thunk
 const createUser = (user,callback)=>{
     const uncat = {
         name: 'Uncategorized',
@@ -119,7 +119,7 @@ const getUser = (id,callback)=>{
 }
 const updateUser = (id,obj, callback)=>{
     const idQuery = {accountId:id};
-    return User.findOneAndUpdate(idQuery,obj, standardOptions,callback);
+    return User.findOneAndUpdate(idQuery,obj, updateOptions,callback);
 }
 const createCategory = (category,callback)=>{
     const newCategory = new Category(category);
@@ -127,13 +127,12 @@ const createCategory = (category,callback)=>{
 };
 
 const deleteCategory = (id,callback)=>{
-    const idQuery = {_id:id};
-    return Category.findOneAndRemove(idQuery,callback);
+    return Category.findByIdAndDelete(idQuery,callback);
 };
 
 const updateCategory=(id,obj,callback)=>{
     const idQuery = {_id:id};
-    return Category.findOneAndUpdate(idQuery, obj,standardOptions,callback);
+    return Category.findOneAndUpdate(idQuery, obj,updateOptions,callback);
 };
 
 const getCategory = (id,callback) => {
@@ -146,9 +145,12 @@ const getAllCategories = (accountId,callback)=>{
     return Category.find(query, standardOptions, callback);
 };
 
+const getAllTasks = (accountId,callback)=>{
+    return Task.find({accountId:accountId}, standardOptions,callback);
+}
+
 const getTask = (id,callback)=>{
-    const idQuery = {_id:id};
-    return Task.findOne(idQuery,standardOptions,callback);
+    return Task.findById(id, callback);
 };
 
 const createTask  = (task,callback)=>{
@@ -157,7 +159,7 @@ const createTask  = (task,callback)=>{
 
 const updateTask = (id,obj,callback)=>{
     const idQuery = {_id:id};
-    return Task.findOneAndUpdate(idQuery,obj,standardOptions,callback);
+    return Task.findOneAndUpdate(idQuery,obj,updateOptions,callback);
 };
 
 const deleteTask = (id,callback)=>{
@@ -183,7 +185,7 @@ const deleteEvent = (id,callback)=>{
 
 const updateEvent = (id,obj,callback)=>{
     const idQuery = {_id:id};
-    return Event.findOneAndUpdate(idQuery,obj,standardOptions,callback);
+    return Event.findOneAndUpdate(idQuery,obj,updateOptions,callback);
 };
 
 const createNote = (note, callback)=>{
@@ -200,7 +202,7 @@ const deleteNote = (id, callback)=>{
 };
 
 const updateNote=(id, note, callback)=>{
-    return Note.findOneAndUpdate({_id:id},note, standardOptions, callback);
+    return Note.findOneAndUpdate({_id:id},note, updateOptions, callback);
 };
 
 
@@ -293,6 +295,8 @@ const getTaskOrCategoryRecursive = async (type, id)=>{
 
 
 };
+
+
 
 
 const deleteTaskOrCategoryRecursive = async (type, id)=>{
@@ -395,6 +399,7 @@ const deleteTaskRecursive = async taskId =>{
 
 /**
  * Delete task and reassign all its children to a new parent
+ * @param objType the type of object to delete
  * @param objId the task to delete
  * @param newParentType the type of the new parent
  * @param newParentId the id of the new parent
@@ -402,9 +407,10 @@ const deleteTaskRecursive = async taskId =>{
  */
 const deleteTaskOrCategoryAndRebaseChildren = async (objType, objId, newParentType, newParentId) => {
     try {
-        const deletedObj = await objType.findOneAndRemove({_id:objId});
+        const deletedObj = await objType.findOneAndRemove.call(objType, {_id:objId});
         const newParent = await getParentByType(newParentType, newParentId);
-        return await rebaseAllChildren(deletedObj, newParentType, newParent, true);
+        await rebaseAllChildren(deletedObj, newParentType, newParent, true);
+        return deletedObj;
     } catch (err){
         throw new Error('Error deleting task:' + err);
     }
@@ -470,10 +476,11 @@ const getChildList = (child, parent)=>{
 
 const rebaseAllChildren = async (oldParent, newParentType, newParent, oldParentIsDeleted)=>{
     try{
+        const taskList = oldParent.subTasks?oldParent.subTasks:oldParent.tasks;
         await Promise.all(
-            oldParent.tasks.map(
+            taskList.map(
                 async taskId=>{
-                    const task = await getTask(taskId);
+                    const task = await getTask(taskId.toString());
                     await rebaseChild(Task,newParentType,task,newParent,oldParentIsDeleted);
                 }
             )
@@ -497,6 +504,15 @@ const deleteCategoryRecursive = async catId =>{
 
 };
 
+const searchByString = async (type, string)=>{
+    try{
+        return await type.find({$text:{$search:string}}, {score:{$meta:"textScore"}})
+
+    } catch (e){
+        return `error in search: ${e}`;
+    }
+}
+
 
 /**
  * returns a promise
@@ -517,6 +533,7 @@ queries.createTask = createTask;
 queries.deleteTask = deleteTask;
 queries.updateTask = updateTask;
 queries.getTask = getTask;
+queries.getAllTasks = getAllTasks;
 queries.createEvent = createEvent;
 queries.deleteEvent = deleteEvent;
 queries.updateEvent = updateEvent;
@@ -540,6 +557,7 @@ queries.getNote = getNote;
 queries.deleteNote = deleteNote;
 queries.updateNote = updateNote;
 queries.getAllCategoriesRecursive = getAllCategoriesRecursive;
+queries.searchByString =searchByString;
 queries.Task = Task;
 queries.Category = Category;
 queries.Event = Event;

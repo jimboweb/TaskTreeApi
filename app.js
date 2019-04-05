@@ -30,7 +30,8 @@ const userRouter = require('./routes/user');
 const categoryRouter = require('./routes/category');
 const eventRouter = require('./routes/event');
 const taskRouter = require('./routes/task');
-const noteRouter = require('./routes/note')
+const noteRouter = require('./routes/note');
+const searchRouter = require('./routes/search');
 
 const app = express();
 
@@ -51,7 +52,7 @@ app.use('/category', categoryRouter);
 app.use('/event',eventRouter);
 app.use('/task',taskRouter);
 app.use('/note', noteRouter);
-
+app.use('/search',searchRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

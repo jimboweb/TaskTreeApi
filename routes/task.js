@@ -5,6 +5,9 @@ const Branch = require('../models/Branch');
 const Permissions = require('../auth/permissions');
 
 // language=JavaScript 1.8
+
+
+
 /**
  * Add task to a category or parent
  * @param parentType 'Task' or 'Category'
@@ -23,6 +26,7 @@ router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
             task.accountId = req.userId;
             task.parent = parent._id;
             task.parentType = parentTypeString;
+            task.completed = false;
             const tsk = await Branch.createTask(task)
             const taskList = parent.tasks ? parent.tasks : parent.subTasks;
             taskList.push(tsk._id);
@@ -38,12 +42,42 @@ router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
 
 });
 
+router.get('/',verifyToken, async (req,res)=>{
+    try {
+        const tasks = await Branch.getAllTasks(req.userId)
+        res.status(200).send(tasks);
+    } catch (err) {
+        res.status(500).send({'err':`There was a problem getting the tasks: ${err.message}`})
+    }})
+
+
+/**
+ * Get task with only its children's ids
+ * @param req.params.taskId: the id of task to get
+ * @return task and all subtasks or error
+ */
+router.get('/:taskId', verifyToken, async (req,res)=>{
+    const taskId = req.params.taskId;
+    try {
+        if (await Branch.verifyOwnership(Branch.Task, taskId, req.userId)) {
+            //fixme 190403: it's crashing right here, but only after I delete a note
+            const task = await Branch.getTask(taskId);
+            res.status(200).send(task);
+        } else {
+            res.status(403).send({"err": "You are not authorized to get that task"});
+        }
+    } catch(err){
+        res.status(500).send({'err': `error retrieving task: ${err.message}`});
+    }
+
+})
+
 /**
  * Get task and subtasks recursively
  * @param req.params.taskId: the id of task to get
  * @return task and all subtasks or error
  */
-router.get('/:taskId', verifyToken, async (req,res)=>{
+router.get('/r/:taskId', verifyToken, async (req,res)=>{
     const taskId = req.params.taskId;
     try {
         if (await Branch.verifyOwnership(Branch.Task, taskId, req.userId)) {
@@ -58,6 +92,7 @@ router.get('/:taskId', verifyToken, async (req,res)=>{
 
 })
 
+
 /**
  * Delete task and all subtasks recursively
  * @param req.params.id: id of task to delete
@@ -66,20 +101,21 @@ router.get('/:taskId', verifyToken, async (req,res)=>{
 router.delete('/:id', verifyToken, async (req,res)=>{
     const taskId = req.params.id;
     try {
-        if (await Branch.verifyOwnership(Branch.Task, taskId, req.userId)) {
+        if (!await Branch.verifyOwnership(Branch.Task, taskId, req.userId)) {
+            res.status(403).send({"err": "You are not authorized to delete that task"});
+        } else {
             const deletedTask = await Branch.deleteTaskRecursive(taskId);
-            const parentId = deletedTask.parentId;
-            const parentType = deletedTask.parentType;
-            const updatedParent = Branch.getParentByType(parentType, parentId);
-            const eventIndex = updatedParent.tasks.indexOf(deletedTask._id);
-            if (eventIndex === -1) {
-                throw new Error("task was not included in its parent");
-            }
-            updatedParent.tasks.splice(eventIndex);
+            const parentId = deletedTask.parent.toString();
+            const parentType = Branch.getParentType(deletedTask.parentType);
+
+            const originalParent = await Branch.getParentByType(parentType, parentId);
+            //todo 190316: need to change event and note to delete from parent this way
+            const taskList = deletedTask.parentType === 'category' ? originalParent.tasks : originalParent.subTasks;
+            const updatedTasks = taskList.filter(id => id.toString() !== deletedTask._id.toString());
+            const updatedTaskObject = deletedTask.parentType === 'category' ? {tasks: updatedTasks} : {subTasks: updatedTasks}
+            const updatedParent = Object.assign(originalParent, updatedTaskObject);
             await Branch.updateParent(parentType, parentId, updatedParent);
             res.status(200).send(deletedTask);
-        } else {
-            res.status(403).send({"err": "You are not authorized to delete that task"});
         }
     } catch (err) {
         res.status(500).send({'err': `error deleting task: ${err.message}`});
@@ -87,6 +123,8 @@ router.delete('/:id', verifyToken, async (req,res)=>{
 
 });
 
+//fixme 190304: delete and rebase leaves stubs in parents and doesn't rebase. part of that may be from UI
+//see ui taskList.js line 32
 /**
  * delete task and rebase children to new parent
  * @param id: id of task to delete
@@ -102,6 +140,13 @@ router.delete('/:id/:newParentType/:newParentId', verifyToken, async(req,res)=>{
         if (await Branch.verifyOwnership(Branch.Task, taskId, req.userId)) {
             const newParentType = Branch.getParentType(newParentTypeString);
             const deletedTask = await Branch.deleteTaskAndRebaseChildren(taskId, newParentType, newParentId);
+            const parentId = deletedTask.parent.toString();
+            const parentType =  Branch.getParentType(deletedTask.parentType);
+
+            const originalParent = await Branch.getParentByType(parentType, parentId);
+            const updatedTasks = originalParent.tasks.filter(id=>id.toString()!==deletedTask._id.toString());
+            const updatedParent = Object.assign(originalParent, {tasks:updatedTasks});
+            await Branch.updateParent(parentType, parentId, updatedParent);
             res.status(200).send(deletedTask);
         } else {
             res.status(403).send({"err": "You are not authorized to delete that task"});
@@ -165,7 +210,9 @@ router.patch('/:taskId', verifyToken, async(req,res)=>{
     }catch (e) {
         res.status(500).send({'err':'error rebasing task' + e.message});
     }
-})
+});
+
+
 
 
 module.exports=router;

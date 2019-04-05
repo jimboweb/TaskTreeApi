@@ -67,11 +67,10 @@ const createUser  = (req,res, next) => {
  */
 const getToken=(user)=>{
         return jwt.sign({id: user._id}, config.jwtSecret, {
-            expiresIn: 3600 // expires in 1 hour
+            expiresIn: 43200 // expires in 12 hours because really who cares right now
         });
 };
 
-//TODO 181009: upload and test this, then add it to all the other routes
 
 router.post('/register',
     registerAccount,

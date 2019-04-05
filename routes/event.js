@@ -5,23 +5,26 @@ const Branch = require('../models/Branch');
 const httpUtils = require('../utility/httpUtil');
 const cors = require('cors');
 
-
 /**
  * get event by id
  * @param req.params.id: id of event
  * @return the event
  */
-router.get(':/id', verifyToken,  async (req,res)=>{
-    const eventId = req.params.id;
-    if(!(await Branch.verifyOwnership(Branch.Event,eventId))){
-        res.status(403).send({"err":"You are not authorized to get that event"});
-    } else {
-        const event = await Branch.getEvent(eventId, err => {
-            res.status(500).send({"err": `error retrieving event: ${err}`});
-        });
-        res.status(200).send(event);
+
+router.get('/:eventId', verifyToken, async (req,res)=>{
+    const eventId = req.params.eventId;
+    try {
+        if (await Branch.verifyOwnership(Branch.Event, eventId, req.userId)) {
+            const event = await Branch.getEvent(eventId);
+            res.status(200).send(event);
+        } else {
+            res.status(403).send({"err": "You are not authorized to get that event"});
+        }
+    } catch(err){
+        res.status(500).send({'err': `error retrieving task: ${err.message}`});
     }
-});
+
+})
 
 
 /**
@@ -68,14 +71,11 @@ router.delete('/:id', verifyToken,  async (req,res)=>{
     } else {
         try {
             const deletedEvent = await Branch.deleteEvent(eventId);
-            const parentId = deletedEvent.parentId;
-            const parentType = deletedEvent.parentType;
-            const updatedParent = Branch.getParentByType(parentType, parentId);
-            const eventIndex = updatedParent.events.indexOf(deletedEvent._id);
-            if (eventIndex === -1) {
-                throw new Error("event was not included in its parent");
-            }
-            updatedParent.events.splice(eventIndex);
+            const parentId = deletedEvent.parent.toString();
+            const parentType = Branch.getParentType(deletedEvent.parentType);
+            const originalParent = await Branch.getParentByType(parentType, parentId);
+            const updatedEvents = originalParent.events.filter(id=>id.toString()!==deletedEvent._id.toString());
+            const updatedParent = Object.assign(originalParent, {tasks:updatedEvents});
             await Branch.updateParent(parentType, parentId, updatedParent);
             res.status(200).send(deletedEvent);
         } catch (err) {

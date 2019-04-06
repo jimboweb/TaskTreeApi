@@ -60,7 +60,6 @@ router.get('/:taskId', verifyToken, async (req,res)=>{
     const taskId = req.params.taskId;
     try {
         if (await Branch.verifyOwnership(Branch.Task, taskId, req.userId)) {
-            //fixme 190403: it's crashing right here, but only after I delete a note
             const task = await Branch.getTask(taskId);
             res.status(200).send(task);
         } else {

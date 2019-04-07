@@ -198,8 +198,23 @@ const updateNote=(id, note, callback)=>{
     return Note.findByIdAndUpdate(id,note, updateOptions, callback);
 };
 
+const getTypeByString=(childTypeString)=>{
+    const childType= {'task':Branch.Task,
+        'category':Branch.Category,
+        'event':Branch.event,
+        'note':Branch.note}[childTypeString];
 
+    if(!childType){
+        throw {
+            'err': 'invalid child type string in getChildTypeByString'
+    }
+    return childType;
+}
 
+const getChildren=(childTypeString, parentId, callback)=>{
+    const childType = getTypeByString(childTypeString);
+    return childType.find({parentId:parentId},null, callback);
+}
 
 /**
  * Get the parent of a task or event. For now only categories and tasks

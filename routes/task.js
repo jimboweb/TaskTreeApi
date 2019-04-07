@@ -44,7 +44,8 @@ router.post('/:parentType/:parentId', verifyToken, async (req,res)=>{
 
 router.get('/',verifyToken, async (req,res)=>{
     try {
-        const tasks = await Branch.getAllTasks(req.userId)
+        const tasks = await Branch.getAllTasks(req.userId);
+
         res.status(200).send(tasks);
     } catch (err) {
         res.status(500).send({'err':`There was a problem getting the tasks: ${err.message}`})

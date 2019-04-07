@@ -134,8 +134,17 @@ const updateCategory=(id,obj,callback)=>{
     return Category.findByIdAndUpdate(id, obj,updateOptions,callback);
 };
 
-const getCategory = (id,callback) => {
-    return Category.findById(id, standardOptions,callback);
+const  getCategory = async (id,callback) => {
+    return await Category.findById(
+        id,
+        standardOptions,
+        //fixme 190307: rtrnCat is null
+        rtrnCat=>
+            Object.assign(
+            rtrnCat,
+            getAllChildren(id,['task','event'], callback)
+        )
+    );
 };
 
 const getAllCategories = (accountId,callback)=>{
@@ -199,14 +208,16 @@ const updateNote=(id, note, callback)=>{
 };
 
 const getTypeByString=(childTypeString)=>{
-    const childType= {'task':Branch.Task,
-        'category':Branch.Category,
-        'event':Branch.event,
-        'note':Branch.note}[childTypeString];
+    const childTypes= {'task':Task,
+        'category':Category,
+        'event':Event,
+        'note':Note};
+    const childType = childTypes[childTypeString]
 
-    if(!childType){
+    if(!childType) {
         throw {
             'err': 'invalid child type string in getChildTypeByString'
+        }
     }
     return childType;
 }
@@ -214,6 +225,31 @@ const getTypeByString=(childTypeString)=>{
 const getChildren=(childTypeString, parentId, callback)=>{
     const childType = getTypeByString(childTypeString);
     return childType.find({parentId:parentId},null, callback);
+};
+
+
+
+const getAllChildren = async (parentId, childTypeStrings, callback)=>{
+
+    try
+    {
+        const children = await Promise.all(
+            childTypeStrings.reduce(
+                (childTypeString,obj)=>getChildren(
+                    childTypeString,
+                    parentId,
+                    children=>{
+                        obj[childTypeString]=children;
+                        return obj;
+                    }
+                )
+            )
+        );
+        return callback (children);
+
+    } catch (err){
+        throw {'err':`error retrieving children in Branch.getAllchildren: ${err}`};
+    }
 }
 
 /**
@@ -518,7 +554,7 @@ const searchByString = async (type, string)=>{
     } catch (e){
         return `error in search: ${e}`;
     }
-}
+};
 
 
 /**

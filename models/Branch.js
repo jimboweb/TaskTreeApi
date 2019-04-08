@@ -134,17 +134,14 @@ const updateCategory=(id,obj,callback)=>{
     return Category.findByIdAndUpdate(id, obj,updateOptions,callback);
 };
 
-const  getCategory = async (id,callback) => {
-    return await Category.findById(
-        id,
-        standardOptions,
-        //fixme 190307: rtrnCat is null
-        rtrnCat=>
-            Object.assign(
-            rtrnCat,
-            getAllChildren(id,['task','event'], callback)
-        )
-    );
+const  getCategory = async (id) => {
+    try{
+    const cats = await Category.findById(id, standardOptions, null);
+    const children = await getAllChildren(id,['task','event'], null);
+    return Object.assign(cats, children);
+    } catch (err){
+        return({'err':`there was a problem getting category: ${err}`})
+    }
 };
 
 const getAllCategories = (accountId,callback)=>{
@@ -223,13 +220,17 @@ const getTypeByString=(childTypeString)=>{
 }
 
 const getChildren=(childTypeString, parentId, callback)=>{
+    try {
     const childType = getTypeByString(childTypeString);
     return childType.find({parentId:parentId},null, callback);
+    } catch (err) {
+        throw {'err':`there was a problem getting child in getChildren: ${err}`}
+    }
 };
 
 
 
-const getAllChildren = async (parentId, childTypeStrings, callback)=>{
+const getAllChildren = async (parentId, childTypeStrings)=>{
 
     try
     {
@@ -245,7 +246,7 @@ const getAllChildren = async (parentId, childTypeStrings, callback)=>{
                 )
             )
         );
-        return callback (children);
+        return children;
 
     } catch (err){
         throw {'err':`error retrieving children in Branch.getAllchildren: ${err}`};

@@ -219,10 +219,11 @@ const getTypeByString=(childTypeString)=>{
     return childType;
 }
 
-const getChildren=(childTypeString, parentId, callback)=>{
+const getChildren=async (childTypeString, parentId, callback)=>{
     try {
     const childType = getTypeByString(childTypeString);
-    return childType.find({parentId:parentId},null, callback);
+    const children = await childType.find({parent:parentId},null, callback);
+    return children;
     } catch (err) {
         throw {'err':`there was a problem getting child in getChildren: ${err}`}
     }
@@ -235,15 +236,19 @@ const getAllChildren = async (parentId, childTypeStrings)=>{
     try
     {
         const children = await Promise.all(
-            childTypeStrings.reduce(
-                (childTypeString,obj)=>getChildren(
-                    childTypeString,
-                    parentId,
-                    children=>{
-                        obj[childTypeString]=children;
-                        return obj;
+            childTypeStrings.map(
+                async childTypeString=>
+                    {
+                        const child = await getChildren(childTypeString,parentId,child=>child)
+                        return [childTypeString,child]
                     }
-                )
+            )
+        ).then(
+            children=>children.reduce(
+                (accum,child)=>{
+                    accum[child[0]]=child[1];
+                    return accum;
+                }
             )
         );
         return children;

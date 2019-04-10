@@ -138,7 +138,8 @@ const  getCategory = async (id) => {
     try{
     const cats = await Category.findById(id, standardOptions, null);
     const children = await getAllChildren(id,['task','event'], null);
-    return Object.assign(cats, children);
+    const rtrn = Object.assign(cats, children);
+    return rtrn;
     } catch (err){
         return({'err':`there was a problem getting category: ${err}`})
     }
@@ -243,16 +244,14 @@ const getAllChildren = async (parentId, childTypeStrings)=>{
                         return [childTypeString,child]
                     }
             )
-        ).then(
-            children=>children.reduce(
-                (accum,child)=>{
-                    accum[child[0]]=child[1];
-                    return accum;
-                }
-            )
-        );
-        return children;
-
+        )
+        const rtrn= children.reduce(
+            (accum,child)=>{
+                accum[`${child[0]}s`]=child[1];
+                return accum;
+            }, {}
+        )
+        return rtrn;
     } catch (err){
         throw {'err':`error retrieving children in Branch.getAllchildren: ${err}`};
     }

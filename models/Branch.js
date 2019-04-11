@@ -136,18 +136,32 @@ const updateCategory=(id,obj,callback)=>{
 
 const  getCategory = async (id) => {
     try{
-    const cats = await Category.findById(id, standardOptions, null);
+    const cat = await Category.findById(id, standardOptions, null);
     const children = await getAllChildren(id,['task','event'], null);
-    const rtrn = Object.assign(cats, children);
-    return rtrn;
+    return Object.assign(cat, children);
     } catch (err){
         return({'err':`there was a problem getting category: ${err}`})
     }
 };
 
-const getAllCategories = (accountId,callback)=>{
-    const query = {accountId:accountId};
-    return Category.find(query, standardOptions, callback);
+const findCategoriesByUserId=async (userId, callback)=> {
+    const query = {accountId:userId};
+    return await Category.find(query, standardOptions, callback);
+}
+
+const getAllCategories = async (accountId,callback)=>{
+    try
+    {
+    const categories = await findCategoriesByUserId(accountId,callback)
+    return await Promise.all(categories.map(
+        async cat=>{
+            const children = await getAllChildren(cat._id,['task','event'], null);
+            return Object.assign(cat, children);
+        })
+    )
+    } catch (err) {
+        throw ({'err':`there was an error in getAllCategories: ${err}`})
+    }
 };
 
 const getAllTasks = (accountId,callback)=>{
@@ -244,14 +258,13 @@ const getAllChildren = async (parentId, childTypeStrings)=>{
                         return [childTypeString,child]
                     }
             )
-        )
-        const rtrn= children.reduce(
+        );
+        return children.reduce(
             (accum,child)=>{
-                accum[`${child[0]}s`]=child[1];
+                accum[`${child[0]}s`]=child[1].map(item=>item._id);
                 return accum;
             }, {}
         )
-        return rtrn;
     } catch (err){
         throw {'err':`error retrieving children in Branch.getAllchildren: ${err}`};
     }

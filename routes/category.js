@@ -42,20 +42,20 @@ router.get('/',
     });
 
 
-/**
- * Get all categories for user associated with token
- */
-router.get('/r',
-    
-    verifyToken,
-    async (req,res)=>{
-    try {
-        const cats = await Branch.getAllCategoriesRecursive(req.userId)
-        res.status(200).send(cats);
-    } catch (err) {
-        res.status(500).send({'err':`There was a problem getting the category: ${err.message}`})
-    }
-});
+// /**
+//  * Get all categories for user associated with token - doesn't work now
+//  */
+// router.get('/r',
+//
+//     verifyToken,
+//     async (req,res)=>{
+//     try {
+//         const cats = await Branch.getAllCategoriesRecursive(req.userId)
+//         res.status(200).send(cats);
+//     } catch (err) {
+//         res.status(500).send({'err':`There was a problem getting the category: ${err.message}`})
+//     }
+// });
 
 /**
  * Get category by id. Will return unauthorized if accountId
@@ -75,22 +75,22 @@ router.get('/:id', verifyToken,  async (req,res)=>{
 });
 
 
-/**
- * Get category by id. Will return unauthorized if accountId
- * doesn't match userId of user associated with token
- */
-router.get('/r/:id', verifyToken,  async (req,res)=>{
-    try {
-        if ((await Branch.verifyOwnership(Branch.Category, req.params.id, req.userId))) {
-            const cat = await Branch.getCategoryRecursive(req.params.id);
-            res.status(200).send(cat);
-        } else {
-            res.status(403).send({"err": "You are not authorized to get that category"});
-        }
-    } catch (e) {
-        res.status(500).send({'err':`There was a problem retrieving that category: ${e.message}`})
-    }
-});
+// /**
+//  * Get category by id. Will return unauthorized if accountId - doesn't work now
+//  * doesn't match userId of user associated with token
+//  */
+// router.get('/r/:id', verifyToken,  async (req,res)=>{
+//     try {
+//         if ((await Branch.verifyOwnership(Branch.Category, req.params.id, req.userId))) {
+//             const cat = await Branch.getCategoryRecursive(req.params.id);
+//             res.status(200).send(cat);
+//         } else {
+//             res.status(403).send({"err": "You are not authorized to get that category"});
+//         }
+//     } catch (e) {
+//         res.status(500).send({'err':`There was a problem retrieving that category: ${e.message}`})
+//     }
+// });
 
 router.delete('/:id', verifyToken,  async (req,res)=>{
     try {

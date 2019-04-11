@@ -144,12 +144,10 @@ const  getCategory = async (id) => {
     }
 };
 
-const findCategoriesByUserId=async (userId, callback)=> {
-    const query = {accountId:userId};
-    return await Category.find(query, standardOptions, callback);
-}
 
 const getAllCategories = async (accountId,callback)=>{
+    const findCategoriesByUserId=async (userId, callback)=> await Category.find({accountId:userId}, standardOptions, callback);
+
     try
     {
     const categories = await findCategoriesByUserId(accountId,callback)
@@ -160,16 +158,36 @@ const getAllCategories = async (accountId,callback)=>{
         })
     )
     } catch (err) {
-        throw ({'err':`there was an error in getAllCategories: ${err}`})
+        return ({'err':`there was an error in getAllCategories: ${err}`})
     }
 };
 
-const getAllTasks = (accountId,callback)=>{
-    return Task.find({accountId:accountId}, standardOptions,callback);
+
+//TODO 190411: test getTask and getAllTasks
+const getAllTasks = async (accountId,callback)=>{
+    try {
+    const getTasksByUserId=async (userId)=>await Task.find({accountId:userId}, standardOptions,callback);
+    const tasks= getTasksByUserId();
+        return await Promise.all(tasks.map(
+            async tsk=>{
+                const children = await getAllChildren(tsk._id,['subtask','event','note'], null);
+                return Object.assign(tsk, children);
+            })
+        )
+    } catch (err) {
+        return ({'err':`there was an error in getAllCategories: ${err}`})
+    }
+
 }
 
 const getTask = (id,callback)=>{
-    return Task.findById(id, callback);
+    try {
+        const task = Task.findById(id, callback);
+        const children = getAllChildren(id, ['subtask', 'event', 'note']);
+        return Object.assign(task, children);
+    } catch (err) {
+        return({'err':`there was an error getting task: ${err}`})
+    }
 };
 
 const createTask  = (task,callback)=>{
@@ -254,8 +272,9 @@ const getAllChildren = async (parentId, childTypeStrings)=>{
             childTypeStrings.map(
                 async childTypeString=>
                     {
-                        const child = await getChildren(childTypeString,parentId,child=>child)
-                        return [childTypeString,child]
+                        const adjustedString = childTypeString==='subtask'?'task':childTypeString;
+                        const child = await getChildren(adjustedString,parentId,child=>child)
+                        return [adjustedString,child]
                     }
             )
         );
@@ -332,7 +351,12 @@ const updateParent = (parentType, parentId, parent)=>{
     })
 }
 
-
+/**
+ * @deprecated doesn't work now
+ * @param type
+ * @param id
+ * @returns {Promise<Binary|*|Array|*|*|*>}
+ */
 const getTaskOrCategoryRecursive = async (type, id)=>{
     const rslt = await type.findById.call(type, id,{}, standardOptions, err=>{
         if(err){
@@ -356,7 +380,6 @@ const getTaskOrCategoryRecursive = async (type, id)=>{
 
 
 };
-
 
 
 
@@ -388,6 +411,13 @@ const deleteTaskOrCategoryRecursive = async (type, id)=>{
 
 };
 
+/**
+ *
+ * @deprecated doesn't work now
+ * @param type
+ * @param id
+ * @returns {Promise<Binary|*|Array|*|*|*>}
+ */
 const getAllCategoriesRecursive = async(accountId)=>{
     const cats =await getAllCategories(accountId);
     const catIds = cats.map(

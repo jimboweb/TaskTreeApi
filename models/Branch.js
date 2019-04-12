@@ -180,10 +180,10 @@ const getAllTasks = async (accountId,callback)=>{
 
 }
 
-const getTask = (id,callback)=>{
+const getTask = async (id,callback)=>{
     try {
-        const task = Task.findById(id, callback);
-        const children = getAllChildren(id, ['subtask', 'event', 'note']);
+        const task = await Task.findById(id, callback);
+        const children = await getAllChildren(id, ['subtask', 'event', 'note']);
         return Object.assign(task, children);
     } catch (err) {
         return({'err':`there was an error getting task: ${err}`})
@@ -274,7 +274,7 @@ const getAllChildren = async (parentId, childTypeStrings)=>{
                     {
                         const adjustedString = childTypeString==='subtask'?'task':childTypeString;
                         const child = await getChildren(adjustedString,parentId,child=>child)
-                        return [adjustedString,child]
+                        return [childTypeString,child]
                     }
             )
         );

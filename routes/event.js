@@ -50,8 +50,6 @@ router.post('/:parentType/:parentId', verifyToken,  async (req,res)=>{
             newEvent.parent = parent._id;
             newEvent.parentType = req.params.parentType;
             const event = await Branch.createEvent(newEvent);
-            parent.events.push(event._id);
-            await Branch.updateParent(parentFunction, parentId, parent);
             res.status(200).send(event);
         } catch (err) {
             res.status(500).send({'err': `error creating event: ${err.message}`});
@@ -71,12 +69,6 @@ router.delete('/:id', verifyToken,  async (req,res)=>{
     } else {
         try {
             const deletedEvent = await Branch.deleteEvent(eventId);
-            const parentId = deletedEvent.parent.toString();
-            const parentType = Branch.getParentType(deletedEvent.parentType);
-            const originalParent = await Branch.getParentByType(parentType, parentId);
-            const updatedEvents = originalParent.events.filter(id=>id.toString()!==deletedEvent._id.toString());
-            const updatedParent = Object.assign(originalParent, {tasks:updatedEvents});
-            await Branch.updateParent(parentType, parentId, updatedParent);
             res.status(200).send(deletedEvent);
         } catch (err) {
             res.status(500).send({'err': `error deleting event: ${err.message}`});

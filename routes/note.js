@@ -30,8 +30,6 @@ router.post('/:parentType/:parentId', verifyToken,  async (req,res)=>{
             newNote.parentType = req.params.parentType;
             newNote.dateStamp = new Date();
             const note = await Branch.createNote(newNote);
-            parent.notes.push(note._id);
-            await Branch.updateParent(parentFunction, parentId, parent);
             res.status(200).send(note);
         } catch (err) {
             res.status(500).send({'err': `error creating note: ${err.message}`});
@@ -62,16 +60,9 @@ router.delete('/:id', verifyToken,  async (req, res)=>{
     const id = req.params.id;
     if(!(await Branch.verifyOwnership(Branch.Note,id, req.userId))){
         res.status(403).send({'err':'you are not authorized to delete that note'});
-    } else { //TODO 180819: add this `else` to all the other verifyOwnership or it'll still go ahead and do the action wtihout permission
+    } else {
         try {
             const deletedNote = await Branch.deleteNote(id);
-            const parentId = deletedNote.parent.toString();
-            const parentType = Branch.getParentType(deletedNote.parentType);
-            const originalParent = await Branch.getParentByType(parentType, parentId);
-            const updatedNotes = originalParent.notes.filter(id=>id.toString()!==deletedNote._id.toString());
-            const updatedParent = Object.assign(originalParent, {notes:updatedNotes});
-            await Branch.updateParent(parentType, parentId, updatedParent);
-            //fixme 190401: crashes on sending deleted note- looks like it's in verifyownership getting note again after the delete
             res.status(200).send(deletedNote);
         } catch (err) {
             res.status(500).send({'err':'there was an error deleting that note: ' + err.message})

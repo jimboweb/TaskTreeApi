@@ -5,7 +5,6 @@ const Permissions = require('../auth/permissions');
 const standardOptions = {};
 const updateOptions = Object.assign({new:true},standardOptions);
 
-//TODO 190404: change all the findOnes to findById
 
 /**
  * accountId linked to Account object
@@ -27,8 +26,6 @@ const userSchema = Schema ({
  */
 const categorySchema = Schema({
     name: String,
-    tasks: [{type: Schema.Types.ObjectId, ref: 'Task'}],
-    events: [{type: Schema.Types.ObjectId, ref: 'Event'}],
     user: {type: Schema.Types.ObjectId, ref: 'User'},
     accountId: String
 });
@@ -47,12 +44,9 @@ const categorySchema = Schema({
 const taskSchema = Schema({
     name: String,
     description: String,
-    subTasks: [{type: Schema.Types.ObjectId, ref: 'Task'}],
-    events: [{type: Schema.Types.ObjectId, ref: 'Event'}],
     completed: Boolean,
     deadline: Date,
     startDate: Date,
-    notes: [{type: Schema.Types.ObjectId, ref: 'Note'}],
     external: Boolean,
     parent: Schema.Types.ObjectId,
     parentType: String,
@@ -95,12 +89,6 @@ const Event = mongoose.model('Event', eventSchema);
 const Note = mongoose.model('Note', noteSchema);
 
 const createUser = (user,callback)=>{
-    const uncat = {
-        name: 'Uncategorized',
-        tasks: [],
-        events: [],
-        accountId: user.accountId
-    }
     createCategory(uncat,
         (err,cat)=>{
             const catId = cat._id.toString();
@@ -109,7 +97,7 @@ const createUser = (user,callback)=>{
                 email:user.email,
                 categories:[catId]
             });
-            return User.save(newUser,callback);
+            return User.create(newUser,callback);
         })
 };
 
@@ -131,7 +119,9 @@ const deleteCategory = (id,callback)=>{
 };
 
 const updateCategory=(id,obj,callback)=>{
-    return Category.findByIdAndUpdate(id, obj,updateOptions,callback);
+    //client may return category with tasks and events lists, so remove them
+    const objWithoutTasksOrEvents = objWithoutProperties(obj,['tasks','events'])
+    return Category.findByIdAndUpdate(id, objWithoutTasksOrEvents,updateOptions,callback);
 };
 
 const  getCategory = async (id) => {
@@ -195,7 +185,9 @@ const createTask  = (task,callback)=>{
 };
 
 const updateTask = (id,obj,callback)=>{
-    return Task.findByIdAndUpdate(id,obj,updateOptions,callback);
+    //client may return category with tasks and events lists, so remove them
+    const objWithoutSubtasksAndEvents = objWithoutProperties(obj,['tasks','subTasks','events'])
+    return Task.findByIdAndUpdate(id,objWithoutSubtasksAndEvents,updateOptions,callback);
 };
 
 const deleteTask = (id,callback)=>{
@@ -327,29 +319,6 @@ const getParentType=(parentTypeString)=>{
 
 }
 
-const updateParent = (parentType, parentId, parent)=>{
-    return new Promise((resolve, reject)=>{
-        let parentFunction;
-        if(parentType === Category){
-            parentFunction = updateCategory;
-        } else if (parentType === Task){
-            parentFunction = updateTask;
-        } else if (parentType === Event) {
-            parentFunction = updateEvent;
-        } else {
-            throw new Error(`${parentType} is not a valid parent type`)
-        }
-        if(!parentFunction){
-            reject({'err':`${parentType} is not a valid parent type`});
-        }
-        parentFunction.call(this,parentId,parent,(err,prnt)=>{
-            if(err){
-                reject({error:'unable to add new task to parent'});
-            }
-            resolve(prnt);
-        })
-    })
-}
 
 /**
  * @deprecated doesn't work now
@@ -365,8 +334,8 @@ const getTaskOrCategoryRecursive = async (type, id)=>{
     });
 
     const result = rslt.toObject();
-    const tasks = result.tasks?result.tasks:result.subTasks;
-    const events = result.events;
+    const tasks = Task.find({parentId:id},null, callback);
+    const events = Event.find({parentId:id},null, callback);
     result.children = {};
     result.children.tasks = await getAllTasksRecursive(tasks);
     result.children.events = await Promise.all(
@@ -386,9 +355,9 @@ const getTaskOrCategoryRecursive = async (type, id)=>{
 const deleteTaskOrCategoryRecursive = async (type, id)=>{
     const rslt = await type.findByIdAndRemove.call(type, id);
     const result = rslt.toObject();
-    const tasks = result.tasks?result.tasks:result.subTasks;
-    const events = result.events;
-    const notes = result.notes;
+    const tasks = Task.find({parentId:id},null, callback)
+    const events = Event.find({parentId:id},null, callback)
+    const notes = Note.find({parentId:id},null, callback)
     result.children = {};
     result.children.tasks = await deleteAllTasksRecursive(tasks);
     result.children.events = await Promise.all(
@@ -456,16 +425,6 @@ const deleteAllTasksRecursive = async(taskIds)=>{
     return rtrn;
 };
 
-const applyAsyncToAll = async (func, ids)=>{
-    const rtrn = await Promise.all(
-        ids.map(
-            async id=>{
-                return await func(id.toString());
-            }
-        )
-    )
-};
-
 
 const verifyOwnership = async (type, id, accountId)=>{
     try {
@@ -527,43 +486,16 @@ const deleteTaskAndRebaseChildren = async(id,newParentType,newParentId)=>{
  * @return {Promise<void>} updated child
  */
 const rebaseChild = async (childType, newParentType, child, newParent, oldParentIsDeleted) => {
-    const oldParentId = child.parent.toString();
-    const oldParentTypeString = child.parentType;
     child.parent = newParent._id;
      child.parentType = newParent instanceof Category?'category':'task';
     try{
-        if(!oldParentIsDeleted){
-            const oldParentType =  getParentType(oldParentTypeString);
-            const oldParent = await getParentByType(oldParentType,oldParentId);
-            const oldChildTypeList = getChildList(child,oldParent);
-            const childOldIndex = oldChildTypeList.indexOf(child);
-            oldChildTypeList.splice(childOldIndex);
-            await oldParentType.findByIdAndUpdate(oldParent._id, oldParent, {});
-        }
         await childType.findByIdAndUpdate(child._id, child, {});
-        const newChildTypeList = getChildList(child, newParent);
-        newChildTypeList.push(child);
-        const modifiedNewParent = await newParentType.findByIdAndUpdate(newParent._id, newParent);
         return child;
     } catch (err){
         throw new Error('Error rebasing children:' + err);
     }
 
 };
-
-const getChildList = (child, parent)=>{
-    let childTypeList;
-    if(child instanceof Task){
-        if(parent instanceof Category){
-            childTypeList = parent.tasks;
-        } else {
-            childTypeList = parent.subTasks;
-        }
-    } else {
-        childTypeList = parent.events;
-    }
-    return childTypeList;
-}
 
 const rebaseAllChildren = async (oldParent, newParentType, newParent, oldParentIsDeleted)=>{
     try{
@@ -613,7 +545,17 @@ const getCategoryRecursive=(categoryId)=>{
     return getTaskOrCategoryRecursive(Category,categoryId);
 };
 
-const queries = {};
+const objWithoutProperties=(obj,propStrings)=>{
+    let copy = Object.create(obj);
+    propStrings.forEach(propString=>{
+        if(copy.hasOwnProperty(propString)){
+            delete copy[propString]
+        }
+    });
+    return copy;
+}
+
+let queries = {};
 queries.createUser = createUser;
 queries.getUser = getUser;
 queries.createCategory = createCategory;
@@ -633,7 +575,6 @@ queries.updateUser = updateUser;
 queries.getAllCategories = getAllCategories;
 queries.getParentByString = getParentByString;
 queries.getParentByType = getParentByType;
-queries.updateParent = updateParent;
 queries.getCategoryRecursive = getCategoryRecursive;
 queries.getTaskRecursive = getTaskRecursive;
 queries.verifyOwnership = verifyOwnership;

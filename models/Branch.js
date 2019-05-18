@@ -127,8 +127,9 @@ const updateCategory=(id,obj,callback)=>{
 const  getCategory = async (id) => {
     try{
     const cat = await Category.findById(id, standardOptions, null);
+    const catObj = cat.toObject();
     const children = await getAllChildren(id,['task','event'], null);
-    return Object.assign(cat, children);
+    return Object.assign(catObj, children);
     } catch (err){
         return({'err':`there was a problem getting category: ${err}`})
     }
@@ -173,8 +174,9 @@ const getAllTasks = async (accountId,callback)=>{
 const getTask = async (id,callback)=>{
     try {
         const task = await Task.findById(id, callback);
+        const taskObj = task.toObject();
         const children = await getAllChildren(id, ['subtask', 'event', 'note']);
-        return Object.assign(task, children);
+        return Object.assign(taskObj, children);
     } catch (err) {
         return({'err':`there was an error getting task: ${err}`})
     }

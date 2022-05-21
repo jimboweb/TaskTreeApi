@@ -1,6 +1,5 @@
-const uiUrls = ['http://localhost:8080'];
+const uiUrls = ['http://localhost:8080', 'https://reading-insomnia.herokuapp.com'];
 
-//TODO 181013: allw the x-access-token hedaer
 
 const addCrossOriginHeaders = (req,res,next) =>{
     uiUrls.forEach(uiUrl=>{

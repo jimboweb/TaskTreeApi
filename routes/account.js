@@ -15,6 +15,7 @@ const httpUtils = require('../utility/httpUtil');
  * @param next
  */
 const registerAccount = (req, res, next) => {
+    console.log("recieved registration request")
     Account.register(new Account({username: req.body.username, email:req.body.email}),
         req.body.password,
         function (err, account) {
@@ -67,7 +68,7 @@ const createUser  = (req,res, next) => {
  */
 const getToken=(user)=>{
         return jwt.sign({id: user._id}, config.jwtSecret, {
-            expiresIn: 43200 // expires in 12 hours because really who cares right now
+            expiresIn: 43200
         });
 };
 
@@ -80,7 +81,7 @@ router.post('/register',
 /**
  * If login works, responds with a token
  */
-router.post('/login',  (req,res,next)=>{passport.authenticate('local', (err, user) => {
+router.post('/login',  (req,res,next)=>{passport.authenticate('local', {failureRedirect: '/login'},(err, user) => {
     console.log(`login request received. user = ${req.body.username}`)
     //TODO 180726 make error and unauthorized login redirects something better
     if (err) {

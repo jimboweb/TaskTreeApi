@@ -89,6 +89,11 @@ const Event = mongoose.model('Event', eventSchema);
 const Note = mongoose.model('Note', noteSchema);
 
 const createUser = (user,callback)=>{
+    let uncat = new Category({
+        name:"Uncategorized",
+        user:user.userName,
+        accountId: user.accountId
+    });
     createCategory(uncat,
         (err,cat)=>{
             const catId = cat._id.toString();

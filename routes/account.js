@@ -81,7 +81,8 @@ router.post('/register',
 /**
  * If login works, responds with a token
  */
-router.post('/login',  (req,res,next)=>{passport.authenticate('local', {failureRedirect: '/login'},(err, user) => {
+router.post('/login',  (req,res,next)=>{passport.authenticate('local', {successRedirect: '/', failureRedirect: '/login'}
+,(err, user) => {
     console.log(`login request received. user = ${req.body.username}`)
     //TODO 180726 make error and unauthorized login redirects something better
     if (err) {
@@ -89,7 +90,7 @@ router.post('/login',  (req,res,next)=>{passport.authenticate('local', {failureR
         return;
     }
     if (!user) {
-        res.status(401).send("unauthorized login");
+        res.status(401).send("bla bla");
         return;
     }
     try {
@@ -98,7 +99,8 @@ router.post('/login',  (req,res,next)=>{passport.authenticate('local', {failureR
     } catch (e){
         res.status(500).send(`there was an error: ${e.message}`)
     }
-})(req, res, next);
+}
+)(req, res, next);
 });
 
     //TODO later: fix the logout so we invalidate the token somehow. alternately do a toeken-refresh thing.

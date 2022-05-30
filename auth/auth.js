@@ -11,7 +11,6 @@ var params = {
 };
 
 module.exports = () => {
-    // TODO: error here: JwtStrategy requires a secret or key
     var strategy = new Strategy(params, function(payload, done) {
         var user = users[payload.id] || null;
         if (user) {

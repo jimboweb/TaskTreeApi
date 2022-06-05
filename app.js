@@ -1,5 +1,7 @@
 require('dotenv').load();
 const createError = require('http-errors');
+const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
@@ -24,6 +26,8 @@ if(process.env.DBENV==='LOCAL'){
     dbPw = process.env.DBREMOTEPW;
 }
 
+let cookieSecure = process.env.COOKIESECURE;
+let sessionSecret = process.env.SESSIONSECRET;
 
 const indexRouter = require('./routes/index');
 const userRouter = require('./routes/user');
@@ -33,7 +37,21 @@ const taskRouter = require('./routes/task');
 const noteRouter = require('./routes/note');
 const searchRouter = require('./routes/search');
 
+
 const app = express();
+
+app.use(session({
+    secret: sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: cookieSecure },
+    // you can store your sessions in mongo or in mysql or redis where ever     you want.
+    store: MongoStore.create({
+        mongoUrl: db.makeDbUri(dbPrtcl, dbUser, dbPw, dbStr),
+        touchAfter: 24 * 3600,
+        collection: 'sessions' // collection in mongo where sessions are to be saved
+    })
+}))
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -53,6 +71,8 @@ app.use('/event',eventRouter);
 app.use('/task',taskRouter);
 app.use('/note', noteRouter);
 app.use('/search',searchRouter);
+
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
